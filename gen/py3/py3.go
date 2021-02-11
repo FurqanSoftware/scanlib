@@ -3,6 +3,8 @@
 package py3
 
 import (
+	"strings"
+
 	"git.furqansoftware.net/toph/scanlib/ast"
 	"git.furqansoftware.net/toph/scanlib/gen/code"
 )
@@ -11,7 +13,10 @@ func Generate(n *ast.Source) ([]byte, error) {
 	ctx := Context{
 		types: map[string]string{},
 		cw:    code.NewWriter("\t"),
+		ozs:   map[interface{}]Optimization{},
 	}
+
+	analyzeSource(&ctx, n)
 
 	ctx.cw.Println("_ = None")
 
@@ -52,8 +57,14 @@ func GenerateStatement(ctx *Context, n *ast.Statement) error {
 		return GenerateForStmt(ctx, n.ForStmt)
 
 	case n.EOLStmt != nil:
-		ctx.cw.Println("_ = None")
 		ctx.scan = 0
+
+		oz, ok := ctx.ozs[n.EOLStmt]
+		if ok {
+			return oz.Generate(ctx)
+		}
+
+		ctx.cw.Println("_ = None")
 		return nil
 
 	case n.EOFStmt != nil:
@@ -85,16 +96,20 @@ func GenerateVarDecl(ctx *Context, n *ast.VarDecl) error {
 			ctx.cw.Println()
 		}
 	}
+
 	return nil
 }
 
 func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
+	oz, ok := ctx.ozs[n]
+	if ok {
+		return oz.Generate(ctx)
+	}
+
 	ctx.cw.Println("if _ == None: _ = input().split()")
 	for _, f := range n.RefList {
 		ctx.cw.Printf("%s", f.Identifier)
-		x := f.Identifier
 		for _, i := range f.Indices {
-			x += "[]"
 			ctx.cw.Print("[")
 			err := GenerateExpression(ctx, &i)
 			if err != nil {
@@ -102,7 +117,7 @@ func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 			}
 			ctx.cw.Print("]")
 		}
-		ctx.cw.Printf(" = %s(_[%d])", ctx.types[x], ctx.scan)
+		ctx.cw.Printf(" = %s(_[%d])", ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))], ctx.scan)
 		ctx.cw.Println()
 		ctx.scan++
 	}
