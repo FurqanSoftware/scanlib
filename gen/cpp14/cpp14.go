@@ -102,6 +102,9 @@ func GenerateVarDecl(ctx *Context, n *ast.VarDecl) error {
 
 	case n.VarSpec.Type.TypeLit != nil:
 		t := ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName]
+		if t == "string" {
+			ctx.includes["string"] = true
+		}
 
 		ctx.cw.Printf("%s", t)
 		for i, x := range n.VarSpec.IdentList {
