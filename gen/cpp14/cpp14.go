@@ -278,8 +278,8 @@ func GenerateValue(ctx *Context, n *ast.Value) error {
 		ctx.cw.Printf(n.Variable.Identifier)
 		return nil
 
-	case n.Integer != nil:
-		ctx.cw.Printf("%d", *n.Integer)
+	case n.Number != nil:
+		ctx.cw.Printf("%s", *n.Number)
 		return nil
 
 	case n.String != nil:
