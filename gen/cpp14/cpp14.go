@@ -138,7 +138,8 @@ func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 		t := ctx.types[f.Identifier]
 		switch t {
 		case "bool", "int", "long long", "string":
-			ctx.cw.Printf("cin >> %s;\n", f.Identifier)
+			ctx.cw.Printf("cin >> %s;", f.Identifier)
+			ctx.cw.Println()
 
 		default:
 			return errors.New("bad type")
@@ -162,11 +163,13 @@ func GenerateForStmt(ctx *Context, n *ast.ForStmt) error {
 	if err != nil {
 		return err
 	}
-	ctx.cw.Printf("; ++i) {\n")
+	ctx.cw.Printf("; ++i) {")
+	ctx.cw.Println()
 	ctx.cw.Indent(1)
 	GenerateBlock(ctx, &n.Block)
 	ctx.cw.Indent(-1)
-	ctx.cw.Printf("}\n")
+	ctx.cw.Printf("}")
+	ctx.cw.Println()
 	return nil
 }
 

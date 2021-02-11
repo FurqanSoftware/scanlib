@@ -13,6 +13,8 @@ type Writer struct {
 
 	indent string
 	d      int
+
+	r, c int
 }
 
 func NewWriter(indent string) *Writer {
@@ -31,22 +33,27 @@ func (w *Writer) Indent(d int) {
 }
 
 func (w *Writer) printIndent() {
-	if w.d > 0 {
-		fmt.Fprint(w.buf, strings.Repeat(w.indent, w.d))
+	if w.d > 0 && w.c == 0 {
+		n, _ := fmt.Fprint(w.buf, strings.Repeat(w.indent, w.d))
+		w.c += n
 	}
 }
 
 func (w *Writer) Print(a ...interface{}) {
 	w.printIndent()
-	fmt.Fprint(w.buf, a...)
+	n, _ := fmt.Fprint(w.buf, a...)
+	w.c += n
+}
+
+func (w *Writer) Printf(format string, a ...interface{}) {
+	w.printIndent()
+	n, _ := fmt.Fprintf(w.buf, format, a...)
+	w.c += n
 }
 
 func (w *Writer) Println(a ...interface{}) {
 	w.printIndent()
 	fmt.Fprintln(w.buf, a...)
-}
-
-func (w *Writer) Printf(format string, a ...interface{}) {
-	w.printIndent()
-	fmt.Fprintf(w.buf, format, a...)
+	w.r++
+	w.c = 0
 }
