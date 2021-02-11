@@ -109,6 +109,7 @@ func GenerateVarDecl(ctx *Context, n *ast.VarDecl) error {
 		ctx.cw.Printf("%s", t)
 		for i, x := range n.VarSpec.IdentList {
 			ctx.types[x] = "array"
+			ctx.types[x+"[]"] = t
 
 			if i > 0 {
 				ctx.cw.Printf(",")
