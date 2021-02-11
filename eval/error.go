@@ -1,5 +1,7 @@
 package eval
 
+import "fmt"
+
 type ErrUndefined struct {
 	Name string
 }
@@ -32,10 +34,13 @@ func (e ErrNonIntegerIndex) Error() string {
 	return "non-integer index"
 }
 
-type ErrCheckError struct{}
+type ErrCheckError struct {
+	Pos    Cursor
+	Clause int
+}
 
 func (e ErrCheckError) Error() string {
-	return "check error"
+	return fmt.Sprintf("%d:%d: check error (clause %d)", e.Pos.Ln, e.Pos.Col, e.Clause)
 }
 
 type ErrExpectedEOL struct{}
@@ -60,4 +65,8 @@ type ErrUnexpectedEOF struct{}
 
 func (e ErrUnexpectedEOF) Error() string {
 	return "unexpected EOF"
+}
+
+type Cursor struct {
+	Ln, Col int
 }

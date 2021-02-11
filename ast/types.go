@@ -2,6 +2,8 @@ package ast
 
 import (
 	"strings"
+
+	"github.com/alecthomas/participle/v2/lexer"
 )
 
 type Source struct {
@@ -33,6 +35,8 @@ type ScanStmt struct {
 }
 
 type CheckStmt struct {
+	Pos lexer.Position
+
 	ExprList []Expression `"check" @@ ( "," @@ )*`
 }
 

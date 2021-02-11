@@ -29,13 +29,13 @@ func TestEvaluate(t *testing.T) {
 			label:  "add/check#01",
 			source: sourceAdd,
 			input:  "-3 2\n",
-			err:    ErrCheckError{},
+			err:    ErrCheckError{Pos: Cursor{3, 1}, Clause: 0},
 		},
 		{
 			label:  "add/check#02",
 			source: sourceAdd,
 			input:  "3 200\n",
-			err:    ErrCheckError{},
+			err:    ErrCheckError{Pos: Cursor{3, 1}, Clause: 3},
 		},
 		{
 			label:  "add/check#03",
@@ -52,7 +52,7 @@ func TestEvaluate(t *testing.T) {
 			label:  "grid/ok#02",
 			source: sourceGrid,
 			input:  "3 5\n**...\n..*..\n.x..*\n",
-			err:    ErrCheckError{},
+			err:    ErrCheckError{Pos: Cursor{9, 2}, Clause: 0},
 		},
 		{
 			label:  "n1018/ok#01",
@@ -68,7 +68,7 @@ func TestEvaluate(t *testing.T) {
 			label:  "n1018/check#01",
 			source: sourceN1018,
 			input:  "1000000000000000001",
-			err:    ErrCheckError{},
+			err:    ErrCheckError{Pos: Cursor{3, 1}, Clause: 1},
 		},
 	} {
 		t.Run(c.label, func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestEvaluate(t *testing.T) {
 			ctx := NewContext(strings.NewReader(c.input))
 			_, err = Evaluate(ctx, n)
 			if c.err != err {
-				t.Errorf("want err == %v, got %#v", c.err, err)
+				t.Errorf("want err == %v, got %v", c.err, err)
 			}
 		})
 	}

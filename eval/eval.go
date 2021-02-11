@@ -119,14 +119,14 @@ func EvaluateScanStmt(ctx *Context, n *ast.ScanStmt) (interface{}, error) {
 }
 
 func EvaluateCheckStmt(ctx *Context, n *ast.CheckStmt) (interface{}, error) {
-	for _, e := range n.ExprList {
+	for i, e := range n.ExprList {
 		v, err := EvaluateExpression(ctx, &e)
 		if err != nil {
 			return nil, err
 		}
 		vb, _ := v.(bool)
 		if !vb {
-			return nil, ErrCheckError{}
+			return nil, ErrCheckError{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Clause: i}
 		}
 	}
 	return nil, nil
