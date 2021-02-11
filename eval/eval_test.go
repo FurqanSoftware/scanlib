@@ -49,9 +49,25 @@ func TestEvaluate(t *testing.T) {
 			input:  "3 5\n**...\n..*..\n....*\n",
 		},
 		{
-			label:  "grid/ok#01",
+			label:  "grid/ok#02",
 			source: sourceGrid,
 			input:  "3 5\n**...\n..*..\n.x..*\n",
+			err:    ErrCheckError{},
+		},
+		{
+			label:  "n1018/ok#01",
+			source: sourceN1018,
+			input:  "1",
+		},
+		{
+			label:  "n1018/ok#02",
+			source: sourceN1018,
+			input:  "100000000000000000",
+		},
+		{
+			label:  "n1018/check#01",
+			source: sourceN1018,
+			input:  "1000000000000000001",
 			err:    ErrCheckError{},
 		},
 	} {
@@ -63,7 +79,7 @@ func TestEvaluate(t *testing.T) {
 			ctx := NewContext(strings.NewReader(c.input))
 			_, err = Evaluate(ctx, n)
 			if c.err != err {
-				t.Errorf("want err == %v, got %v", c.err, err)
+				t.Errorf("want err == %v, got %#v", c.err, err)
 			}
 		})
 	}
@@ -88,4 +104,9 @@ for i 0 R
 	eol
 end
 eof
+`
+
+const sourceN1018 = `var N int64
+scan N
+check N >= 1, N <= 1000000000000000000
 `

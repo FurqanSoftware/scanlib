@@ -101,12 +101,14 @@ type OpFactor struct {
 }
 
 type Value struct {
-	Integer       *int        `  @Integer`
+	Number        *Number     `  @Number`
 	Call          *Call       `| @@`
 	Variable      *Variable   `| @@`
 	String        *string     `| @String`
 	Subexpression *Expression `| "(" @@ ")"`
 }
+
+type Number string
 
 type Operator string
 

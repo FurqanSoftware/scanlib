@@ -11,7 +11,7 @@ var (
 		{"Keyword", "end|eof|eol|for|scan|var", nil},
 		{"Operator", "\\|\\||&&|==|!=|<=|>=|<|>", nil},
 		{"String", `"(\\"|[^"])*"`, nil},
-		{"Integer", `[-+]?\d+`, nil},
+		{"Number", `[-+]?(\d*\.)?\d+`, nil},
 		{"Identifier", `[a-zA-Z_]\w*`, nil},
 		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`, nil},
 		{"EOL", `[\n\r]+`, nil},

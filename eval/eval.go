@@ -137,17 +137,17 @@ func EvaluateForStmt(ctx *Context, n *ast.ForStmt) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	li, ok := l.(int)
+	li, ok := toInt(l)
 	if !ok {
-		return nil, errors.New("")
+		return nil, errors.New("invalid loop bound")
 	}
 	h, err := EvaluateExpression(ctx, &n.Range.High)
 	if err != nil {
 		return nil, err
 	}
-	hi, ok := h.(int)
+	hi, ok := toInt(h)
 	if !ok {
-		return nil, errors.New("")
+		return nil, errors.New("invalid loop bound")
 	}
 	for i := li; i < hi; i++ {
 		ctx.Values[n.Range.Index] = Value{Int, i}
@@ -197,26 +197,46 @@ func EvaluateOpCmp(ctx *Context, n *ast.OpCmp, l interface{}) (interface{}, erro
 	}
 	switch l := l.(type) {
 	case int:
-		r, ok := r.(int)
+		ri, ok := toInt(r)
 		if !ok {
 			return nil, ErrInvalidOperation{}
 		}
 		switch n.Operator {
 		case "==":
-			return l == r, nil
+			return l == ri, nil
 		case "!=":
-			return l != r, nil
+			return l != ri, nil
 		case "<=":
-			return l <= r, nil
+			return l <= ri, nil
 		case ">=":
-			return l >= r, nil
+			return l >= ri, nil
 		case "<":
-			return l < r, nil
+			return l < ri, nil
 		case ">":
-			return l > r, nil
+			return l > ri, nil
+		}
+
+	case int64:
+		ri, ok := toInt64(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "==":
+			return l == ri, nil
+		case "!=":
+			return l != ri, nil
+		case "<=":
+			return l <= ri, nil
+		case ">=":
+			return l >= ri, nil
+		case "<":
+			return l < ri, nil
+		case ">":
+			return l > ri, nil
 		}
 	}
-	panic("unreachable")
+	return nil, ErrInvalidOperation{}
 }
 
 func EvaluateTerm(ctx *Context, n *ast.Term) (interface{}, error) {
@@ -273,8 +293,8 @@ func EvaluateValue(ctx *Context, n *ast.Value) (interface{}, error) {
 			indices = append(indices, vi)
 		}
 		return ctx.GetValue(n.Variable.Identifier, indices).Data, nil
-	case n.Integer != nil:
-		return *n.Integer, nil
+	case n.Number != nil:
+		return *n.Number, nil
 	case n.String != nil:
 		return *n.String, nil
 	case n.Subexpression != nil:
