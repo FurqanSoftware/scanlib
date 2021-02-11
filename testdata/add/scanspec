@@ -1,0 +1,5 @@
+var A, B int
+scan A, B
+check A >= 0, A < 10, B >= 0, B < 20
+eol
+eof
