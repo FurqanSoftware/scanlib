@@ -1,0 +1,3 @@
+var N int64
+scan N
+check N >= 1, N <= 10^18
