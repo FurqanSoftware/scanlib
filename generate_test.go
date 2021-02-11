@@ -9,6 +9,28 @@ import (
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 	"git.furqansoftware.net/toph/scanlib/gen/cpp14"
+	"git.furqansoftware.net/toph/scanlib/gen/py3"
+)
+
+type language struct {
+	key   string
+	ext   string
+	genFn func(*ast.Source) ([]byte, error)
+}
+
+var (
+	langs = []language{
+		{
+			key:   "cpp14",
+			ext:   ".cpp",
+			genFn: cpp14.Generate,
+		},
+		{
+			key:   "py3",
+			ext:   ".py",
+			genFn: py3.Generate,
+		},
+	}
 )
 
 func TestGenerate(t *testing.T) {
@@ -16,50 +38,33 @@ func TestGenerate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, fi := range fis {
-		codesrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "cpp14.cpp"))
-		if os.IsNotExist(err) {
-			continue
-		}
+	for _, l := range langs {
+		t.Run(l.key, func(t *testing.T) {
+			for _, fi := range fis {
+				codesrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), l.key+l.ext))
+				if os.IsNotExist(err) {
+					codesrc = []byte{}
+				}
 
-		t.Run(fi.Name(), func(t *testing.T) {
-			specsrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "scanspec"))
-			if err != nil {
-				t.Fatal(err)
-			}
-			n, err := ast.ParseString("inputspec", string(specsrc))
-			if err != nil {
-				t.Fatal(err)
-			}
+				t.Run(fi.Name(), func(t *testing.T) {
+					specsrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "scanspec"))
+					if err != nil {
+						t.Fatal(err)
+					}
+					n, err := ast.ParseString("inputspec", string(specsrc))
+					if err != nil {
+						t.Fatal(err)
+					}
 
-			code, err := cpp14.Generate(n)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !bytes.Equal(code, codesrc) {
-				t.Errorf("want:\n\n%s\n\ngot:\n\n%s", codesrc, code)
+					code, err := l.genFn(n)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if !bytes.Equal(code, codesrc) {
+						t.Errorf("want:\n\n%s\n\ngot:\n\n%s", codesrc, code)
+					}
+				})
 			}
 		})
 	}
 }
-
-const sourceAdd = `var A, B int
-scan A, B
-check A >= 0, A < 10, B >= 0, B < 20
-eol
-eof
-`
-
-const sourceGrid = `var R, C int
-scan R, C
-check R >= 1, R < 25, C >= 1, C < 25
-eol
-var G [R]string
-for i 0 R
-	scan G[i]
-	check len(G[i]) == C
-	check re(G[i], "^[*.]+$")
-	eol
-end
-eof
-`
