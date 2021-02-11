@@ -41,7 +41,10 @@ func EvaluateStatement(ctx *Context, n *ast.Statement) (interface{}, error) {
 
 	case n.EOLStmt != nil:
 		_, err := fmt.Fscanf(ctx.Input, "\n")
-		return nil, err
+		if err != nil {
+			return nil, ErrExpectedEOL{}
+		}
+		return nil, nil
 
 	case n.EOFStmt != nil:
 		// TODO

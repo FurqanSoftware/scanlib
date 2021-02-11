@@ -13,6 +13,7 @@ func TestEvaluate(t *testing.T) {
 		source string
 		input  string
 		err    error
+		errstr string
 	}{
 		{
 			label:  "add/ok#01",
@@ -35,6 +36,12 @@ func TestEvaluate(t *testing.T) {
 			source: sourceAdd,
 			input:  "3 200\n",
 			err:    ErrCheckError{},
+		},
+		{
+			label:  "add/check#03",
+			source: sourceAdd,
+			input:  "3 2 33\n",
+			err:    ErrExpectedEOL{},
 		},
 		{
 			label:  "grid/ok#01",

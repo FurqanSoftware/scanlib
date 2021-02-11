@@ -32,9 +32,32 @@ func (e ErrNonIntegerIndex) Error() string {
 	return "non-integer index"
 }
 
-type ErrCheckError struct {
-}
+type ErrCheckError struct{}
 
 func (e ErrCheckError) Error() string {
 	return "check error"
+}
+
+type ErrExpectedEOL struct{}
+
+func (e ErrExpectedEOL) Error() string {
+	return "expected EOL"
+}
+
+type ErrUnexpectedEOL struct{}
+
+func (e ErrUnexpectedEOL) Error() string {
+	return "unexpected EOL"
+}
+
+type ErrExpectedEOF struct{}
+
+func (e ErrExpectedEOF) Error() string {
+	return "expected EOF"
+}
+
+type ErrUnexpectedEOF struct{}
+
+func (e ErrUnexpectedEOF) Error() string {
+	return "unexpected EOF"
 }
