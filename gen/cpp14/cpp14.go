@@ -4,7 +4,6 @@ package cpp14
 
 import (
 	"bytes"
-	"errors"
 	"sort"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
@@ -103,9 +102,11 @@ func GenerateVarDecl(ctx *Context, n *ast.VarDecl) error {
 
 	case n.VarSpec.Type.TypeLit != nil:
 		t := ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName]
+
 		ctx.cw.Printf("%s", t)
 		for i, x := range n.VarSpec.IdentList {
-			ctx.types[x] = t
+			ctx.types[x] = "array"
+
 			if i > 0 {
 				ctx.cw.Printf(",")
 			}
@@ -123,27 +124,17 @@ func GenerateVarDecl(ctx *Context, n *ast.VarDecl) error {
 
 func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 	for _, f := range n.RefList {
-		// indices := []int{}
-		// for _, i := range f.Indices {
-		// 	v, err := GenerateExpression(ctx, &i)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// 	vi, ok := v.(int)
-		// 	if !ok {
-		// 		return nil, ErrNonIntegerIndex{}
-		// 	}
-		// 	indices = append(indices, vi)
-		// }
-		t := ctx.types[f.Identifier]
-		switch t {
-		case "bool", "int", "long long", "string":
-			ctx.cw.Printf("cin >> %s;", f.Identifier)
-			ctx.cw.Println()
-
-		default:
-			return errors.New("bad type")
+		ctx.cw.Printf("cin >> %s", f.Identifier)
+		for _, i := range f.Indices {
+			ctx.cw.Print("[")
+			err := GenerateExpression(ctx, &i)
+			if err != nil {
+				return err
+			}
+			ctx.cw.Print("]")
 		}
+		ctx.cw.Print(";")
+		ctx.cw.Println()
 	}
 	return nil
 }
