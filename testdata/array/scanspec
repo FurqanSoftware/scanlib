@@ -1,5 +1,11 @@
-N = int
+var N int
+scan N
+check N > 0, N < 100
 eol
-A = array int N
-eol
+var A [N]int
+for i 0 N
+	scan A[i]
+	check A[i] >= 0, A[i] <= 10000
+	eol
+end
 eof
