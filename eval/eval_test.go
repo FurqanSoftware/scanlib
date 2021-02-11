@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.furqansoftware.net/toph/inputlib/ast"
+	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
 func TestEvaluate(t *testing.T) {

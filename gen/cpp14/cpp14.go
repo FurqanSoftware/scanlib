@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"git.furqansoftware.net/toph/inputlib/ast"
+	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
 type Context struct {

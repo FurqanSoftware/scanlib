@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"git.furqansoftware.net/toph/inputlib/ast"
+	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
 func Evaluate(ctx *Context, n *ast.Source) (interface{}, error) {

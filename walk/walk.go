@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git.furqansoftware.net/toph/inputlib/ast"
+	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
 func Walk(n *ast.Source) {

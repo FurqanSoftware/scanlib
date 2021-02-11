@@ -1,4 +1,4 @@
-module git.furqansoftware.net/toph/inputlib
+module git.furqansoftware.net/toph/scanlib
 
 go 1.15
 

@@ -3,7 +3,7 @@ package cpp14
 import (
 	"testing"
 
-	"git.furqansoftware.net/toph/inputlib/ast"
+	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
 var sources = map[string]string{
