@@ -1,0 +1,7 @@
+R = int(1, 25)
+C = int(1, 25)
+eol()
+for R {
+	G = string(C, "*.")
+}
+eof()

@@ -1,0 +1,5 @@
+N = int
+eol
+A = array int N
+eol
+eof
