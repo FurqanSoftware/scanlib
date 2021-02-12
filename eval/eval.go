@@ -126,7 +126,7 @@ func EvaluateCheckStmt(ctx *Context, n *ast.CheckStmt) (interface{}, error) {
 		}
 		vb, _ := v.(bool)
 		if !vb {
-			return nil, ErrCheckError{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Clause: i}
+			return nil, ErrCheckError{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Clause: i + 1}
 		}
 	}
 	return nil, nil
