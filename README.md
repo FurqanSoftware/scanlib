@@ -106,6 +106,18 @@ for i in range(0, R):
 check eof eol for scan var
 ```
 
+#### Types
+
+```
+bool
+int
+int64
+float32
+float64
+string
+[]T
+```
+
 #### Check Statements
 
 ```
