@@ -3,6 +3,7 @@
 package py3
 
 import (
+	"bytes"
 	"strings"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
@@ -18,14 +19,18 @@ func Generate(n *ast.Source) ([]byte, error) {
 
 	analyzeSource(&ctx, n)
 
-	ctx.cw.Println("_ = None")
-
 	err := GenerateSource(&ctx, n)
 	if err != nil {
 		return nil, err
 	}
 
-	return ctx.cw.Bytes(), nil
+	r := bytes.Buffer{}
+	if ctx.linevar {
+		r.WriteString("_ = None\n")
+	}
+	r.Write(ctx.cw.Bytes())
+
+	return r.Bytes(), nil
 }
 
 func GenerateSource(ctx *Context, n *ast.Source) error {
@@ -57,7 +62,7 @@ func GenerateStatement(ctx *Context, n *ast.Statement) error {
 		return GenerateForStmt(ctx, n.ForStmt)
 
 	case n.EOLStmt != nil:
-		ctx.scan = 0
+		ctx.scanarg = 0
 
 		oz, ok := ctx.ozs[n.EOLStmt]
 		if ok {
@@ -106,6 +111,7 @@ func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 		return oz.Generate(ctx)
 	}
 
+	ctx.linevar = true
 	ctx.cw.Println("if _ == None: _ = input().split()")
 	for _, f := range n.RefList {
 		ctx.cw.Printf("%s", f.Identifier)
@@ -117,9 +123,9 @@ func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 			}
 			ctx.cw.Print("]")
 		}
-		ctx.cw.Printf(" = %s(_[%d])", ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))], ctx.scan)
+		ctx.cw.Printf(" = %s(_[%d])", ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))], ctx.scanarg)
 		ctx.cw.Println()
-		ctx.scan++
+		ctx.scanarg++
 	}
 	return nil
 }

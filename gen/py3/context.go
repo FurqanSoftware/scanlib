@@ -10,7 +10,8 @@ type Context struct {
 	types map[string]string
 	cw    *code.Writer
 
-	scan int
+	linevar bool
+	scanarg int
 
 	ozs map[interface{}]Optimization
 }
