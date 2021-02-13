@@ -65,7 +65,7 @@ eof
 #### Built-in Functions
 
 ```
-len(a): Returns the length of array a
+len(a): Returns the length of array a.
 re(s, x): Returns true if string s matches regular expression x.
 ```
 
