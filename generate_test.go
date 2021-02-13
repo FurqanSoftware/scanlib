@@ -1,4 +1,4 @@
-package cpp14
+package scanlib
 
 import (
 	"bytes"
