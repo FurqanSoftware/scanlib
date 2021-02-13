@@ -62,10 +62,18 @@ The following indicates end of file.
 eof
 ```
 
+#### Built-in Functions
+
+```
+len(a): Returns the length of array a
+re(s, x): Returns true if string s matches regular expression x.
+```
+
 ## TODO
 
 - [ ] If Statements
 - [ ] C Generator
 - [ ] Go Generator
+- [ ] Graph Checks
 - [ ] CLI Tool
 - and more...
