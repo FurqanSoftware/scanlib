@@ -103,6 +103,14 @@ func EvaluateScanStmt(ctx *Context, n *ast.ScanStmt) (interface{}, error) {
 			var d int64
 			_, err = fmt.Fscanf(ctx.Input, "%d", &d)
 			v.Data = d
+		case Float32:
+			var d float32
+			_, err = fmt.Fscanf(ctx.Input, "%f", &d)
+			v.Data = d
+		case Float64:
+			var d float64
+			_, err = fmt.Fscanf(ctx.Input, "%f", &d)
+			v.Data = d
 		case String:
 			var d string
 			_, err = fmt.Fscanf(ctx.Input, "%s", &d)
@@ -218,6 +226,46 @@ func EvaluateOpCmp(ctx *Context, n *ast.OpCmp, l interface{}) (interface{}, erro
 
 	case int64:
 		ri, ok := toInt64(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "==":
+			return l == ri, nil
+		case "!=":
+			return l != ri, nil
+		case "<=":
+			return l <= ri, nil
+		case ">=":
+			return l >= ri, nil
+		case "<":
+			return l < ri, nil
+		case ">":
+			return l > ri, nil
+		}
+
+	case float32:
+		ri, ok := toFloat32(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "==":
+			return l == ri, nil
+		case "!=":
+			return l != ri, nil
+		case "<=":
+			return l <= ri, nil
+		case ">=":
+			return l >= ri, nil
+		case "<":
+			return l < ri, nil
+		case ">":
+			return l > ri, nil
+		}
+
+	case float64:
+		ri, ok := toFloat64(r)
 		if !ok {
 			return nil, ErrInvalidOperation{}
 		}

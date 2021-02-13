@@ -1,0 +1,5 @@
+var P float64
+scan P
+check P >= 0.0, P <= 100.0
+eol
+eof

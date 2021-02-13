@@ -8,6 +8,10 @@ func Zero(t Type) Value {
 		return Value{Int, int(0)}
 	case Int64:
 		return Value{Int64, int64(0)}
+	case Float32:
+		return Value{Float32, float32(0)}
+	case Float64:
+		return Value{Float64, float64(0)}
 	case String:
 		return Value{String, string("")}
 	}
