@@ -1,0 +1,1 @@
+P = float(input())
