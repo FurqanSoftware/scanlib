@@ -1,23 +1,27 @@
 # Scanlib
 
-Validate input files and generate input code in different programming languages.
+Use Scanspec Validate input files and generate input code in different programming languages.
 
-## Specification
+## Scanspec
 
-### Keywords
+Learn more about [here](https://help.toph.co/drafts/scanspec).
+
+### Specification
+
+#### Keywords
 
 ```
 check eof eol for scan var
 ```
 
-### Check Statements
+#### Check Statements
 
 ```
 check n > 0, n < 1000
 check e > 0, f < 5.0
 ```
 
-### Variable Declarations
+#### Variable Declarations
 
 ```
 var n int
@@ -26,7 +30,7 @@ var a, b string
 var G [R]string
 ```
 
-### Scan Statements
+#### Scan Statements
 
 ```
 scan n
@@ -35,7 +39,7 @@ scan e, f, n
 scan G[2]
 ```
 
-### For Statements
+#### For Statements
 
 ```
 for i 0 n
@@ -43,14 +47,14 @@ for i 0 n
 end
 ```
 
-### EOL Statements
+#### EOL Statements
 
 The following indicates end of line.
 
 ```
 eol
 ```
-### EOL Statements
+#### EOL Statements
 
 The following indicates end of file.
 
