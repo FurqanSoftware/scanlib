@@ -172,9 +172,9 @@ func WalkValue(n *ast.Value, d int) {
 	pad(d)
 	fmt.Println("Value")
 	switch {
-	case n.Integer != nil:
+	case n.Number != nil:
 		pad(d + 1)
-		fmt.Println("Integer", *n.Integer)
+		fmt.Println("Number", *n.Number)
 	case n.Variable != nil:
 		pad(d + 1)
 		fmt.Println("Variable", *n.Variable)

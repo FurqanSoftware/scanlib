@@ -25,8 +25,8 @@ eof()
 
 func TestParse(t *testing.T) {
 	for _, s := range sources {
-		ast := Specification{}
-		err := inputParser.ParseString("inputspec", s, &ast)
+		n := Source{}
+		err := inputParser.ParseString("inputspec", s, &n)
 		if err != nil {
 			t.Fatal(err)
 		}
