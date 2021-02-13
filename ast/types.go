@@ -15,6 +15,8 @@ type Block struct {
 }
 
 type Statement struct {
+	Pos lexer.Position
+
 	VarDecl   *VarDecl   `( @@`
 	ScanStmt  *ScanStmt  `| @@`
 	CheckStmt *CheckStmt `| @@`
@@ -31,6 +33,8 @@ type VarDecl struct {
 }
 
 type ScanStmt struct {
+	Pos lexer.Position
+
 	RefList []Reference `"scan" @@ ( "," @@ )*`
 }
 
@@ -70,6 +74,8 @@ type Reference struct {
 }
 
 type Expression struct {
+	Pos lexer.Position
+
 	Left  *Cmp     `@@`
 	Right []*OpCmp `@@*`
 }
@@ -80,6 +86,8 @@ type Cmp struct {
 }
 
 type OpCmp struct {
+	Pos lexer.Position
+
 	Operator Operator `@("==" | "!=" | "<=" | ">=" | "<" | ">")`
 	Cmp      *Cmp     `@@`
 }

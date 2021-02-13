@@ -22,16 +22,20 @@ func (e ErrInvalidArgument) Error() string {
 	return "invalid argument"
 }
 
-type ErrInvalidOperation struct{}
-
-func (e ErrInvalidOperation) Error() string {
-	return "invalid operation"
+type ErrInvalidOperation struct {
+	Pos Cursor
 }
 
-type ErrNonIntegerIndex struct{}
+func (e ErrInvalidOperation) Error() string {
+	return fmt.Sprintf("%d:%d: invalid operation", e.Pos.Ln, e.Pos.Col)
+}
+
+type ErrNonIntegerIndex struct {
+	Pos Cursor
+}
 
 func (e ErrNonIntegerIndex) Error() string {
-	return "non-integer index"
+	return fmt.Sprintf("%d:%d: non-integer index", e.Pos.Ln, e.Pos.Col)
 }
 
 type ErrCheckError struct {
@@ -43,28 +47,37 @@ func (e ErrCheckError) Error() string {
 	return fmt.Sprintf("%d:%d: check error (clause %d)", e.Pos.Ln, e.Pos.Col, e.Clause)
 }
 
-type ErrExpectedEOL struct{}
+type ErrExpectedEOL struct {
+	Pos Cursor
+}
 
 func (e ErrExpectedEOL) Error() string {
-	return "expected EOL"
+	return fmt.Sprintf("%d:%d: expected EOL", e.Pos.Ln, e.Pos.Col)
+
 }
 
-type ErrUnexpectedEOL struct{}
+type ErrUnexpectedEOL struct {
+	Pos Cursor
+}
 
 func (e ErrUnexpectedEOL) Error() string {
-	return "unexpected EOL"
+	return fmt.Sprintf("%d:%d: unexpected EOL", e.Pos.Ln, e.Pos.Col)
 }
 
-type ErrExpectedEOF struct{}
+type ErrExpectedEOF struct {
+	Pos Cursor
+}
 
 func (e ErrExpectedEOF) Error() string {
-	return "expected EOF"
+	return fmt.Sprintf("%d:%d: expected EOF", e.Pos.Ln, e.Pos.Col)
 }
 
-type ErrUnexpectedEOF struct{}
+type ErrUnexpectedEOF struct {
+	Pos Cursor
+}
 
 func (e ErrUnexpectedEOF) Error() string {
-	return "unexpected EOF"
+	return fmt.Sprintf("%d:%d: unexpected  EOF", e.Pos.Ln, e.Pos.Col)
 }
 
 type Cursor struct {

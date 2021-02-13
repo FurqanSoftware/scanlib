@@ -42,7 +42,7 @@ func EvaluateStatement(ctx *Context, n *ast.Statement) (interface{}, error) {
 	case n.EOLStmt != nil:
 		_, err := fmt.Fscanf(ctx.Input, "\n")
 		if err != nil {
-			return nil, ErrExpectedEOL{}
+			return nil, ErrExpectedEOL{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
 		}
 		return nil, nil
 
@@ -84,7 +84,7 @@ func EvaluateScanStmt(ctx *Context, n *ast.ScanStmt) (interface{}, error) {
 			}
 			vi, ok := v.(int)
 			if !ok {
-				return nil, ErrNonIntegerIndex{}
+				return nil, ErrNonIntegerIndex{Pos: Cursor{i.Pos.Line, i.Pos.Column}}
 			}
 			indices = append(indices, vi)
 		}
@@ -199,7 +199,7 @@ func EvaluateOpCmp(ctx *Context, n *ast.OpCmp, l interface{}) (interface{}, erro
 	case int:
 		ri, ok := toInt(r)
 		if !ok {
-			return nil, ErrInvalidOperation{}
+			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
 		}
 		switch n.Operator {
 		case "==":
@@ -288,7 +288,7 @@ func EvaluateValue(ctx *Context, n *ast.Value) (interface{}, error) {
 			}
 			vi, ok := v.(int)
 			if !ok {
-				return nil, ErrNonIntegerIndex{}
+				return nil, ErrNonIntegerIndex{Pos: Cursor{i.Pos.Line, i.Pos.Column}}
 			}
 			indices = append(indices, vi)
 		}

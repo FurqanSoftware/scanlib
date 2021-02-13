@@ -41,7 +41,7 @@ func TestEvaluate(t *testing.T) {
 			label:  "add/check#03",
 			source: sourceAdd,
 			input:  "3 2 33\n",
-			err:    ErrExpectedEOL{},
+			err:    ErrExpectedEOL{Pos: Cursor{4, 1}},
 		},
 		{
 			label:  "grid/ok#01",
