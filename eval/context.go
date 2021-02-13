@@ -6,14 +6,18 @@ import (
 
 type Context struct {
 	Values map[string]Value
-	Input  io.Reader
+	Input  *Input
 }
 
-func NewContext(input io.Reader) *Context {
+func NewContext(input io.Reader) (*Context, error) {
+	p, err := NewInput(input)
+	if err != nil {
+		return nil, err
+	}
 	return &Context{
 		Values: map[string]Value{},
-		Input:  input,
-	}
+		Input:  p,
+	}, nil
 }
 
 func (c Context) GetValue(key string, indices []int) Value {

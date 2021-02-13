@@ -2,7 +2,6 @@ package eval
 
 import (
 	"errors"
-	"fmt"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
@@ -40,14 +39,19 @@ func EvaluateStatement(ctx *Context, n *ast.Statement) (interface{}, error) {
 		return EvaluateForStmt(ctx, n.ForStmt)
 
 	case n.EOLStmt != nil:
-		_, err := fmt.Fscanf(ctx.Input, "\n")
+		ok, err := ctx.Input.EOL()
 		if err != nil {
+			return nil, err
+		}
+		if !ok {
 			return nil, ErrExpectedEOL{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
 		}
 		return nil, nil
 
 	case n.EOFStmt != nil:
-		// TODO
+		if !ctx.Input.EOF {
+			return nil, ErrExpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+		}
 		return nil, nil
 	}
 	panic("unreachable")
@@ -93,27 +97,27 @@ func EvaluateScanStmt(ctx *Context, n *ast.ScanStmt) (interface{}, error) {
 		switch v.Type {
 		case Bool:
 			var d bool
-			_, err = fmt.Fscanf(ctx.Input, "%t", &d)
+			_, err = ctx.Input.Scanf("%t", &d)
 			v.Data = d
 		case Int:
 			var d int
-			_, err = fmt.Fscanf(ctx.Input, "%d", &d)
+			_, err = ctx.Input.Scanf("%d", &d)
 			v.Data = d
 		case Int64:
 			var d int64
-			_, err = fmt.Fscanf(ctx.Input, "%d", &d)
+			_, err = ctx.Input.Scanf("%d", &d)
 			v.Data = d
 		case Float32:
 			var d float32
-			_, err = fmt.Fscanf(ctx.Input, "%f", &d)
+			_, err = ctx.Input.Scanf("%f", &d)
 			v.Data = d
 		case Float64:
 			var d float64
-			_, err = fmt.Fscanf(ctx.Input, "%f", &d)
+			_, err = ctx.Input.Scanf("%f", &d)
 			v.Data = d
 		case String:
 			var d string
-			_, err = fmt.Fscanf(ctx.Input, "%s", &d)
+			_, err = ctx.Input.Scanf("%s", &d)
 			v.Data = d
 		default:
 			return nil, ErrCantScanType{}
