@@ -39,6 +39,8 @@ func Generate(n *ast.Source) ([]byte, error) {
 	r.WriteString("\n")
 	r.WriteString("int main() {\n")
 	r.Write(ctx.cw.Bytes())
+	r.WriteString("\t\n")
+	r.WriteString("\treturn 0;\n")
 	r.WriteString("}\n")
 
 	return r.Bytes(), nil

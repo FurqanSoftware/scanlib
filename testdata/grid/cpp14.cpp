@@ -11,4 +11,6 @@ int main() {
 	for (int i = 0; i < R; ++i) {
 		cin >> G[i];
 	}
+	
+	return 0;
 }

@@ -9,4 +9,6 @@ int main() {
 	for (int i = 0; i < N; ++i) {
 		cin >> A[i];
 	}
+	
+	return 0;
 }
