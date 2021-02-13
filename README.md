@@ -4,7 +4,7 @@ Use Scanspec Validate input files and generate input code in different programmi
 
 ## Scanspec
 
-Learn more about [here](https://help.toph.co/drafts/scanspec).
+Learn more about Scanspec [here](https://help.toph.co/drafts/scanspec).
 
 ### Specification
 
