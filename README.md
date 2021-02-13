@@ -7,7 +7,14 @@ Validate input files and generate input code in different programming languages.
 ### Keywords
 
 ```
-eof eol for scan var
+check eof eol for scan var
+```
+
+### Check Statements
+
+```
+check n > 0, n < 1000
+check e > 0, f < 5.0
 ```
 
 ### Variable Declarations
