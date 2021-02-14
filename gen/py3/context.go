@@ -11,7 +11,6 @@ type Context struct {
 	cw    *code.Writer
 
 	linevar bool
-	scanarg int
 
 	ozs map[interface{}]Optimization
 }

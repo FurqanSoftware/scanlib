@@ -62,8 +62,6 @@ func GenerateStatement(ctx *Context, n *ast.Statement) error {
 		return GenerateForStmt(ctx, n.ForStmt)
 
 	case n.EOLStmt != nil:
-		ctx.scanarg = 0
-
 		oz, ok := ctx.ozs[n.EOLStmt]
 		if ok {
 			return oz.Generate(ctx)
@@ -112,7 +110,7 @@ func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 	}
 
 	ctx.linevar = true
-	ctx.cw.Println("if _ == None: _ = input().split()")
+	ctx.cw.Println("if _ == None: _ = list(input().split())")
 	for _, f := range n.RefList {
 		ctx.cw.Printf("%s", f.Identifier)
 		for _, i := range f.Indices {
@@ -123,9 +121,8 @@ func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 			}
 			ctx.cw.Print("]")
 		}
-		ctx.cw.Printf(" = %s(_[%d])", ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))], ctx.scanarg)
+		ctx.cw.Printf(" = %s(_.pop(0))", ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))])
 		ctx.cw.Println()
-		ctx.scanarg++
 	}
 	return nil
 }
