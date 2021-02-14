@@ -2,6 +2,7 @@ package eval
 
 import (
 	"errors"
+	"io"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
@@ -115,6 +116,9 @@ func EvaluateScanStmt(ctx *Context, n *ast.ScanStmt) (interface{}, error) {
 			return nil, ErrCantScanType{}
 		}
 		if err != nil {
+			if err == io.EOF {
+				return nil, ErrUnexpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+			}
 			return nil, err
 		}
 		ctx.SetValue(f.Identifier, indices, v)

@@ -25,19 +25,23 @@ func NewInput(input io.Reader) (*Input, error) {
 func (p *Input) Bool() (bool, error) {
 	b, err := p.next()
 	if err != nil {
-		return false, p.Scanner.Err()
+		return false, err
 	}
-	return strconv.ParseBool(string(b))
+	v, err := strconv.ParseBool(string(b))
+	if err != nil {
+		return false, ErrBadParse{Pos: p.Cursor, Want: "bool", Got: b}
+	}
+	return v, nil
 }
 
 func (p *Input) Int() (int, error) {
 	b, err := p.next()
 	if err != nil {
-		return 0, p.Scanner.Err()
+		return 0, err
 	}
 	n, err := strconv.ParseInt(string(b), 10, 32)
 	if err != nil {
-		return 0, err
+		return 0, ErrBadParse{Pos: p.Cursor, Want: "int", Got: b}
 	}
 	return int(n), nil
 }
@@ -45,19 +49,23 @@ func (p *Input) Int() (int, error) {
 func (p *Input) Int64() (int64, error) {
 	b, err := p.next()
 	if err != nil {
-		return 0, p.Scanner.Err()
+		return 0, err
 	}
-	return strconv.ParseInt(string(b), 10, 64)
+	n, err := strconv.ParseInt(string(b), 10, 64)
+	if err != nil {
+		return 0, ErrBadParse{Pos: p.Cursor, Want: "int64", Got: b}
+	}
+	return n, nil
 }
 
 func (p *Input) Float32() (float32, error) {
 	b, err := p.next()
 	if err != nil {
-		return 0, p.Scanner.Err()
+		return 0, err
 	}
 	f, err := strconv.ParseFloat(string(b), 32)
 	if err != nil {
-		return 0, err
+		return 0, ErrBadParse{Pos: p.Cursor, Want: "float32", Got: b}
 	}
 	return float32(f), nil
 }
@@ -65,11 +73,11 @@ func (p *Input) Float32() (float32, error) {
 func (p *Input) Float64() (float64, error) {
 	b, err := p.next()
 	if err != nil {
-		return 0, p.Scanner.Err()
+		return 0, err
 	}
 	f, err := strconv.ParseFloat(string(b), 64)
 	if err != nil {
-		return 0, err
+		return 0, ErrBadParse{Pos: p.Cursor, Want: "float64", Got: b}
 	}
 	return float64(f), nil
 }
@@ -77,7 +85,7 @@ func (p *Input) Float64() (float64, error) {
 func (p *Input) String() (string, error) {
 	b, err := p.next()
 	if err != nil {
-		return "", p.Scanner.Err()
+		return "", err
 	}
 	return string(b), nil
 }
@@ -85,7 +93,7 @@ func (p *Input) String() (string, error) {
 func (p *Input) EOL() (bool, error) {
 	b, err := p.next()
 	if err != nil {
-		return false, p.Scanner.Err()
+		return false, err
 	}
 	return bytes.Equal(b, []byte("\n")), nil
 }
@@ -99,28 +107,41 @@ func (p *Input) EOF() (bool, error) {
 }
 
 func (p *Input) next() ([]byte, error) {
-	err := p.skipSpace()
+	skip, err := p.skipSpace()
 	if err != nil {
 		return nil, err
+	}
+	if skip {
+		err := p.scan()
+		if err != nil {
+			return nil, err
+		}
 	}
 	b := p.Scanner.Bytes()
 	p.pushCursor(b)
 	return b, nil
 }
 
-func (p *Input) skipSpace() error {
+func (p *Input) scan() error {
 	if !p.Scanner.Scan() {
-		return p.Scanner.Err()
+		err := p.Scanner.Err()
+		if err == nil {
+			err = io.EOF
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *Input) skipSpace() (bool, error) {
+	err := p.scan()
+	if err != nil {
+		return false, err
 	}
 	b := p.Scanner.Bytes()
 	p.pushCursor(b)
 	r, _ := utf8.DecodeRune(b)
-	if r == ' ' {
-		if !p.Scanner.Scan() {
-			return p.Scanner.Err()
-		}
-	}
-	return nil
+	return r == ' ', nil
 }
 
 func (p *Input) pushCursor(b []byte) {
