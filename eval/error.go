@@ -65,11 +65,12 @@ func (e ErrUnexpectedEOL) Error() string {
 }
 
 type ErrExpectedEOF struct {
-	Pos Cursor
+	Pos   Cursor
+	Token []byte
 }
 
 func (e ErrExpectedEOF) Error() string {
-	return fmt.Sprintf("%d:%d: expected EOF", e.Pos.Ln, e.Pos.Col)
+	return fmt.Sprintf("%d:%d: expected EOF, got trailing %v", e.Pos.Ln, e.Pos.Col, e.Token)
 }
 
 type ErrUnexpectedEOF struct {

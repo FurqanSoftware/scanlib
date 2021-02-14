@@ -39,18 +39,22 @@ func EvaluateStatement(ctx *Context, n *ast.Statement) (interface{}, error) {
 		return EvaluateForStmt(ctx, n.ForStmt)
 
 	case n.EOLStmt != nil:
-		ok, err := ctx.Input.EOL()
+		eol, err := ctx.Input.EOL()
 		if err != nil {
 			return nil, err
 		}
-		if !ok {
+		if !eol {
 			return nil, ErrExpectedEOL{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
 		}
 		return nil, nil
 
 	case n.EOFStmt != nil:
-		if !ctx.Input.EOF {
-			return nil, ErrExpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+		eof, err := ctx.Input.EOF()
+		if err != nil {
+			return nil, err
+		}
+		if !eof {
+			return nil, ErrExpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Token: ctx.Input.Scanner.Bytes()}
 		}
 		return nil, nil
 	}
@@ -96,29 +100,17 @@ func EvaluateScanStmt(ctx *Context, n *ast.ScanStmt) (interface{}, error) {
 		var err error
 		switch v.Type {
 		case Bool:
-			var d bool
-			_, err = ctx.Input.Scanf("%t", &d)
-			v.Data = d
+			v.Data, err = ctx.Input.Bool()
 		case Int:
-			var d int
-			_, err = ctx.Input.Scanf("%d", &d)
-			v.Data = d
+			v.Data, err = ctx.Input.Int()
 		case Int64:
-			var d int64
-			_, err = ctx.Input.Scanf("%d", &d)
-			v.Data = d
+			v.Data, err = ctx.Input.Int64()
 		case Float32:
-			var d float32
-			_, err = ctx.Input.Scanf("%f", &d)
-			v.Data = d
+			v.Data, err = ctx.Input.Float32()
 		case Float64:
-			var d float64
-			_, err = ctx.Input.Scanf("%f", &d)
-			v.Data = d
+			v.Data, err = ctx.Input.Float64()
 		case String:
-			var d string
-			_, err = ctx.Input.Scanf("%s", &d)
-			v.Data = d
+			v.Data, err = ctx.Input.String()
 		default:
 			return nil, ErrCantScanType{}
 		}
