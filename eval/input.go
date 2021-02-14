@@ -99,31 +99,38 @@ func (p *Input) EOF() (bool, error) {
 }
 
 func (p *Input) next() ([]byte, error) {
-	if !p.Scanner.Scan() {
-		return nil, p.Scanner.Err()
+	err := p.skipSpace()
+	if err != nil {
+		return nil, err
 	}
 	b := p.Scanner.Bytes()
+	p.pushCursor(b)
+	return b, nil
+}
+
+func (p *Input) skipSpace() error {
+	if !p.Scanner.Scan() {
+		return p.Scanner.Err()
+	}
+	b := p.Scanner.Bytes()
+	p.pushCursor(b)
+	r, _ := utf8.DecodeRune(b)
+	if r == ' ' {
+		if !p.Scanner.Scan() {
+			return p.Scanner.Err()
+		}
+	}
+	return nil
+}
+
+func (p *Input) pushCursor(b []byte) {
 	r, _ := utf8.DecodeRune(b)
 	if r == '\n' {
 		p.Cursor.Ln++
 		p.Cursor.Col = 0
 	} else {
-		p.Cursor.Col += len(b)
+		p.Cursor.Col = len(b)
 	}
-	if r == ' ' {
-		if !p.Scanner.Scan() {
-			return nil, p.Scanner.Err()
-		}
-		b = p.Scanner.Bytes()
-		r, _ = utf8.DecodeRune(b)
-		if r == '\n' {
-			p.Cursor.Ln++
-			p.Cursor.Col = 0
-		} else {
-			p.Cursor.Col += len(b)
-		}
-	}
-	return b, nil
 }
 
 // ScanTokens is a split function for a Scanner that returns each
