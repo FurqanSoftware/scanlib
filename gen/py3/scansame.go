@@ -31,7 +31,7 @@ func (o scanSame) Generate(ctx *Context) error {
 	return nil
 }
 
-func analyzeBlockScanSame(ctx *Context, n *ast.Block) error {
+func analyzeBlockScanSame(ctx *Context, n *ast.Block) {
 	const (
 		szero int = iota
 		svar
@@ -75,10 +75,7 @@ func analyzeBlockScanSame(ctx *Context, n *ast.Block) error {
 		case n.ForStmt != nil:
 			state = szero
 
-			err := analyzeBlock(ctx, &n.ForStmt.Block)
-			if err != nil {
-				return err
-			}
+			analyzeBlock(ctx, &n.ForStmt.Block)
 
 		case n.EOLStmt != nil:
 			if state == sscan {
@@ -96,5 +93,4 @@ func analyzeBlockScanSame(ctx *Context, n *ast.Block) error {
 			state = szero
 		}
 	}
-	return nil
 }

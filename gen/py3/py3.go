@@ -91,12 +91,17 @@ func GenerateVarDecl(ctx *Context, n *ast.VarDecl) error {
 			ctx.types[x] = "array"
 			ctx.types[x+"[]"] = t
 
-			ctx.cw.Printf("%s = [%s] * ", x, ASTZero[t])
-			err := GenerateExpression(ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
-			if err != nil {
-				return err
+			oz, ok := ctx.ozs[n]
+			if ok {
+				return oz.Generate(ctx)
+			} else {
+				ctx.cw.Printf("%s = [%s] * ", x, ASTZero[t])
+				err := GenerateExpression(ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
+				if err != nil {
+					return err
+				}
+				ctx.cw.Println()
 			}
-			ctx.cw.Println()
 		}
 	}
 
@@ -132,6 +137,11 @@ func GenerateCheckStmt(ctx *Context, n *ast.CheckStmt) error {
 }
 
 func GenerateForStmt(ctx *Context, n *ast.ForStmt) error {
+	oz, ok := ctx.ozs[n]
+	if ok {
+		return oz.Generate(ctx)
+	}
+
 	ctx.cw.Printf("for %s in range(", n.Range.Index)
 	err := GenerateExpression(ctx, &n.Range.Low)
 	if err != nil {

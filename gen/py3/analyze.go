@@ -6,12 +6,12 @@ import (
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
-func analyzeSource(ctx *Context, n *ast.Source) error {
-	return analyzeBlock(ctx, &n.Block)
+func analyzeSource(ctx *Context, n *ast.Source) {
+	analyzeBlock(ctx, &n.Block)
 }
 
-func analyzeBlock(ctx *Context, n *ast.Block) error {
+func analyzeBlock(ctx *Context, n *ast.Block) {
 	analyzeBlockScanSame(ctx, n)
 	analyzeBlockScanOne(ctx, n)
-	return nil
+	analyzeBlockScanArray(ctx, n)
 }
