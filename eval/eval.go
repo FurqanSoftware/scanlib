@@ -303,7 +303,60 @@ func EvaluateTerm(ctx *Context, n *ast.Term) (interface{}, error) {
 }
 
 func EvaluateOpTerm(ctx *Context, n *ast.OpTerm, l interface{}) (interface{}, error) {
-	return l, nil
+	r, err := EvaluateTerm(ctx, n.Term)
+	if err != nil {
+		return nil, err
+	}
+	switch l := l.(type) {
+	case int:
+		ri, ok := toInt(r)
+		if !ok {
+			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+		}
+		switch n.Operator {
+		case "+":
+			return l + ri, nil
+		case "-":
+			return l - ri, nil
+		}
+
+	case int64:
+		ri, ok := toInt64(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "+":
+			return l + ri, nil
+		case "-":
+			return l - ri, nil
+		}
+
+	case float32:
+		ri, ok := toFloat32(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "+":
+			return l + ri, nil
+		case "-":
+			return l - ri, nil
+		}
+
+	case float64:
+		ri, ok := toFloat64(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "+":
+			return l + ri, nil
+		case "-":
+			return l - ri, nil
+		}
+	}
+	return nil, ErrInvalidOperation{}
 }
 
 func EvaluateFactor(ctx *Context, n *ast.Factor) (interface{}, error) {

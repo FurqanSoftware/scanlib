@@ -98,6 +98,8 @@ type Term struct {
 }
 
 type OpTerm struct {
+	Pos lexer.Position
+
 	Operator Operator `@("+" | "-")`
 	Term     *Term    `@@`
 }
