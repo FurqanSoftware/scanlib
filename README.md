@@ -59,7 +59,7 @@ scan R, C
 check R >= 1, R < 25, C >= 1, C < 25
 eol
 var G [R]string
-for i 0 R
+for i := 0 ... R
 	scan G[i]
 	check len(G[i]) == C
 	check re(G[i], "^[*.]+$")
@@ -146,7 +146,7 @@ scan G[2]
 #### For Statements
 
 ```
-for i 0 n
+for i := 0 ... n
 	scan G[i]
 end
 ```
