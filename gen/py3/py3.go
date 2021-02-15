@@ -189,33 +189,8 @@ func GenerateCmp(ctx *Context, n *ast.Cmp) error {
 }
 
 func GenerateOpCmp(ctx *Context, n *ast.OpCmp) error {
-	return nil
-	// err := GenerateCmp(ctx, n.Cmp)
-	// if err != nil {
-	// 	return err
-	// }
-	// switch l := l.(type) {
-	// case int:
-	// 	r, ok := r.(int)
-	// 	if !ok {
-	// 		return nil, ErrInvalidOperation{}
-	// 	}
-	// 	switch n.Operator {
-	// 	case "==":
-	// 		return l == r, nil
-	// 	case "!=":
-	// 		return l != r, nil
-	// 	case "<=":
-	// 		return l <= r, nil
-	// 	case ">=":
-	// 		return l >= r, nil
-	// 	case "<":
-	// 		return l < r, nil
-	// 	case ">":
-	// 		return l > r, nil
-	// 	}
-	// }
-	// panic("unreachable")
+	ctx.cw.Print(string(n.Operator))
+	return GenerateCmp(ctx, n.Cmp)
 }
 
 func GenerateTerm(ctx *Context, n *ast.Term) error {
@@ -233,7 +208,8 @@ func GenerateTerm(ctx *Context, n *ast.Term) error {
 }
 
 func GenerateOpTerm(ctx *Context, n *ast.OpTerm) error {
-	return nil
+	ctx.cw.Print(string(n.Operator))
+	return GenerateTerm(ctx, n.Term)
 }
 
 func GenerateFactor(ctx *Context, n *ast.Factor) error {
@@ -241,36 +217,15 @@ func GenerateFactor(ctx *Context, n *ast.Factor) error {
 }
 
 func GenerateOpFactor(ctx *Context, n *ast.OpFactor) error {
-	return nil
+	ctx.cw.Print(string(n.Operator))
+	return GenerateFactor(ctx, n.Factor)
 }
 
 func GenerateValue(ctx *Context, n *ast.Value) error {
 	switch {
 	case n.Call != nil:
-		// args := []interface{}{}
-		// for _, a := range n.Call.Arguments {
-		// 	v, err := GenerateExpression(ctx, &a)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// 	args = append(args, v)
-		// }
-		// return Functions[n.Call.Name](args...)
 
 	case n.Variable != nil:
-		// indices := []int{}
-		// for _, i := range n.Variable.Indices {
-		// 	v, err := GenerateExpression(ctx, &i)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// 	vi, ok := v.(int)
-		// 	if !ok {
-		// 		return nil, ErrNonIntegerIndex{}
-		// 	}
-		// 	indices = append(indices, vi)
-		// }
-		// return ctx.GetValue(n.Variable.Identifier, indices).Data, nil
 		ctx.cw.Printf(n.Variable.Identifier)
 		return nil
 

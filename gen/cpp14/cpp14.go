@@ -199,33 +199,8 @@ func GenerateCmp(ctx *Context, n *ast.Cmp) error {
 }
 
 func GenerateOpCmp(ctx *Context, n *ast.OpCmp) error {
-	return nil
-	// err := GenerateCmp(ctx, n.Cmp)
-	// if err != nil {
-	// 	return err
-	// }
-	// switch l := l.(type) {
-	// case int:
-	// 	r, ok := r.(int)
-	// 	if !ok {
-	// 		return nil, ErrInvalidOperation{}
-	// 	}
-	// 	switch n.Operator {
-	// 	case "==":
-	// 		return l == r, nil
-	// 	case "!=":
-	// 		return l != r, nil
-	// 	case "<=":
-	// 		return l <= r, nil
-	// 	case ">=":
-	// 		return l >= r, nil
-	// 	case "<":
-	// 		return l < r, nil
-	// 	case ">":
-	// 		return l > r, nil
-	// 	}
-	// }
-	// panic("unreachable")
+	ctx.cw.Print(string(n.Operator))
+	return GenerateCmp(ctx, n.Cmp)
 }
 
 func GenerateTerm(ctx *Context, n *ast.Term) error {
@@ -243,7 +218,8 @@ func GenerateTerm(ctx *Context, n *ast.Term) error {
 }
 
 func GenerateOpTerm(ctx *Context, n *ast.OpTerm) error {
-	return nil
+	ctx.cw.Print(string(n.Operator))
+	return GenerateTerm(ctx, n.Term)
 }
 
 func GenerateFactor(ctx *Context, n *ast.Factor) error {
@@ -251,7 +227,8 @@ func GenerateFactor(ctx *Context, n *ast.Factor) error {
 }
 
 func GenerateOpFactor(ctx *Context, n *ast.OpFactor) error {
-	return nil
+	ctx.cw.Print(string(n.Operator))
+	return GenerateFactor(ctx, n.Factor)
 }
 
 func GenerateValue(ctx *Context, n *ast.Value) error {
