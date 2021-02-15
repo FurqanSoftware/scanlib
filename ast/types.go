@@ -11,18 +11,18 @@ type Source struct {
 }
 
 type Block struct {
-	Statement []*Statement `@@*`
+	Statement []*Statement `( @@ ( EOL @@ )* ) EOL?`
 }
 
 type Statement struct {
 	Pos lexer.Position
 
-	VarDecl   *VarDecl   `( @@`
+	VarDecl   *VarDecl   `  @@`
 	ScanStmt  *ScanStmt  `| @@`
 	CheckStmt *CheckStmt `| @@`
 	ForStmt   *ForStmt   `| @@`
 	EOLStmt   *string    `| @"eol"`
-	EOFStmt   *string    `| @"eof" ) EOL`
+	EOFStmt   *string    `| @"eof"`
 	// Comment *string  `( @Comment`
 	// Call    *Call    `| @@`
 	// For     *For     `| @@ ) EOL`
