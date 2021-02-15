@@ -9,7 +9,9 @@ var (
 	inputLexer = stateful.MustSimple([]stateful.Rule{
 		{"Comment", `(?i)#[^\n]*`, nil},
 		{"Keyword", "end|eof|eol|for|scan|var", nil},
-		{"Operator", "\\|\\||&&|==|!=|<=|>=|<|>", nil},
+		{"RelativeOp", "\\|\\||&&|==|!=|<=|>=|<|>", nil},
+		{"MathOp", "[+\\-*/]", nil},
+		{"RangeOp", ":=|\\.\\.\\.", nil},
 		{"String", `"(\\"|[^"])*"`, nil},
 		{"Number", `[-+]?(\d*\.)?\d+`, nil},
 		{"Identifier", `[a-zA-Z_]\w*`, nil},

@@ -130,8 +130,8 @@ func (o *Operator) Capture(s []string) error {
 }
 
 type RangeClause struct {
-	Index string     `@Identifier`
-	Low   Expression `@@`
+	Index string     `@Identifier ":="`
+	Low   Expression `@@ "..."`
 	High  Expression `@@`
 }
 

@@ -2,13 +2,13 @@ var t int
 scan t
 check t >= 1, t <= 10
 eol
-for i 0 t
+for i := 0 ... t
 	var n int
 	scan n
 	check n >= 1, n <= 2000000
 	eol
 	var a [n]int
-	for j 0 n
+	for j := 0 ... n
 		scan a[j]
 		check a[j] >= 1, a[j] <= 2000000
 	end

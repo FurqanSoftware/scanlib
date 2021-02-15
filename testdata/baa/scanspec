@@ -3,7 +3,7 @@ scan N
 check N > 0, N < 20
 eol
 var S [N]string
-for i 0 N
+for i := 0 ... N
 	scan S[i]
 	check len(S[i]) < 20
 	check re(S[i], "^ba+$")

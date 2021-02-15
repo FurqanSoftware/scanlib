@@ -1,0 +1,10 @@
+var cs, n int 
+scan cs
+eol
+check cs > 0, cs<=1000000
+for i := 1 ... cs+1
+	scan n
+	check n>0, n<10000000
+	eol
+end
+eof
