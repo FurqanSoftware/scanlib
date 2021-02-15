@@ -110,7 +110,7 @@ func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
 	}
 
 	ctx.linevar = true
-	ctx.cw.Println("if _ == None: _ = list(input().split())")
+	ctx.cw.Println("if _ == None: _ = input().split()")
 	for _, f := range n.RefList {
 		ctx.cw.Printf("%s", f.Identifier)
 		for _, i := range f.Indices {
