@@ -1,0 +1,5 @@
+var A int
+scan A
+check A > -200000000, A < 200000000
+eol
+eof

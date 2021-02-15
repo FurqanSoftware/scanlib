@@ -9,11 +9,11 @@ var (
 	inputLexer = stateful.MustSimple([]stateful.Rule{
 		{"Comment", `(?i)#[^\n]*`, nil},
 		{"Keyword", "end|eof|eol|for|scan|var", nil},
+		{"String", `"(\\"|[^"])*"`, nil},
+		{"Number", `(\d*\.)?\d+`, nil},
 		{"RelativeOp", "\\|\\||&&|==|!=|<=|>=|<|>", nil},
 		{"MathOp", "[+\\-*/]", nil},
 		{"RangeOp", ":=|\\.\\.\\.", nil},
-		{"String", `"(\\"|[^"])*"`, nil},
-		{"Number", `[-+]?(\d*\.)?\d+`, nil},
 		{"Identifier", `[a-zA-Z_]\w*`, nil},
 		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`, nil},
 		{"EOL", `[\n\r]+`, nil},
@@ -23,7 +23,7 @@ var (
 	inputParser = participle.MustBuild(&Source{},
 		participle.Lexer(inputLexer),
 		participle.Unquote("String"),
-		// participle.UseLookahead(2),
+		participle.UseLookahead(2),
 	)
 )
 

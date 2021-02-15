@@ -360,11 +360,45 @@ func EvaluateOpTerm(ctx *Context, n *ast.OpTerm, l interface{}) (interface{}, er
 }
 
 func EvaluateFactor(ctx *Context, n *ast.Factor) (interface{}, error) {
-	return EvaluateValue(ctx, n.Base)
+	return EvaluateUnary(ctx, n.Unary)
 }
 
 func EvaluateOpFactor(ctx *Context, n *ast.OpFactor, l interface{}) (interface{}, error) {
 	return l, nil
+}
+
+func EvaluateUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
+	switch {
+	case n.Value != nil:
+		return EvaluateValue(ctx, n.Value)
+
+	case n.Negated != nil:
+		v, err := EvaluateValue(ctx, n.Negated)
+		if err != nil {
+			return nil, err
+		}
+		switch v := v.(type) {
+		case int:
+			return -v, nil
+		case int64:
+			return -v, nil
+		case float32:
+			return -v, nil
+		case float64:
+			return -v, nil
+		case ast.Number:
+			vs := string(v)
+			if vs[0] != '-' {
+				vs = "-" + vs
+			} else {
+				vs = vs[1:]
+			}
+			return ast.Number(vs), nil
+		default:
+			return nil, ErrInvalidOperation{}
+		}
+	}
+	panic("unreachable")
 }
 
 func EvaluateValue(ctx *Context, n *ast.Value) (interface{}, error) {

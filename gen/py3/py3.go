@@ -213,12 +213,16 @@ func GenerateOpTerm(ctx *Context, n *ast.OpTerm) error {
 }
 
 func GenerateFactor(ctx *Context, n *ast.Factor) error {
-	return GenerateValue(ctx, n.Base)
+	return GenerateUnary(ctx, n.Unary)
 }
 
 func GenerateOpFactor(ctx *Context, n *ast.OpFactor) error {
 	ctx.cw.Print(string(n.Operator))
 	return GenerateFactor(ctx, n.Factor)
+}
+
+func GenerateUnary(ctx *Context, n *ast.Unary) error {
+	return GenerateValue(ctx, n.Value)
 }
 
 func GenerateValue(ctx *Context, n *ast.Value) error {

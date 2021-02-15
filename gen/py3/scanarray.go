@@ -156,9 +156,10 @@ func expressionVariable(e *ast.Expression) (string, bool) {
 		len(e.Left.Right) == 0 &&
 		len(e.Left.Left.Right) == 0 &&
 		e.Left.Left.Left.Exponent == nil &&
-		e.Left.Left.Left.Base.Variable != nil &&
-		len(e.Left.Left.Left.Base.Variable.Indices) == 0 {
-		return e.Left.Left.Left.Base.Variable.Identifier, true
+		e.Left.Left.Left.Unary.Value != nil &&
+		e.Left.Left.Left.Unary.Value.Variable != nil &&
+		len(e.Left.Left.Left.Unary.Value.Variable.Indices) == 0 {
+		return e.Left.Left.Left.Unary.Value.Variable.Identifier, true
 	}
 	return "", false
 }
@@ -168,8 +169,10 @@ func exprNumber(e *ast.Expression) (string, bool) {
 		len(e.Left.Right) == 0 &&
 		len(e.Left.Left.Right) == 0 &&
 		e.Left.Left.Left.Exponent == nil &&
-		e.Left.Left.Left.Base.Number != nil {
-		return string(*e.Left.Left.Left.Base.Number), true
+		e.Left.Left.Left.Unary != nil &&
+		e.Left.Left.Left.Unary.Value != nil &&
+		e.Left.Left.Left.Unary.Value.Number != nil {
+		return string(*e.Left.Left.Left.Unary.Value.Number), true
 	}
 	return "", false
 }

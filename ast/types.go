@@ -105,13 +105,18 @@ type OpTerm struct {
 }
 
 type Factor struct {
-	Base     *Value `@@`
+	Unary    *Unary `@@`
 	Exponent *Value `( "^" @@ )?`
 }
 
 type OpFactor struct {
 	Operator Operator `@("*" | "/")`
 	Factor   *Factor  `@@`
+}
+
+type Unary struct {
+	Value   *Value `( "+"? @@`
+	Negated *Value `| "-" @@ )`
 }
 
 type Value struct {

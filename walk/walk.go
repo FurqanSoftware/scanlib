@@ -151,8 +151,8 @@ func WalkOpTerm(n *ast.OpTerm, d int) {
 func WalkFactor(n *ast.Factor, d int) {
 	pad(d)
 	fmt.Println("Factor")
-	if n.Base != nil {
-		WalkValue(n.Base, d+1)
+	if n.Unary != nil {
+		WalkUnary(n.Unary, d+1)
 	}
 	if n.Exponent != nil {
 		WalkValue(n.Exponent, d+1)
@@ -166,6 +166,12 @@ func WalkOpFactor(n *ast.OpFactor, d int) {
 	if n.Factor != nil {
 		WalkFactor(n.Factor, d+1)
 	}
+}
+
+func WalkUnary(n *ast.Unary, d int) {
+	pad(d)
+	fmt.Println("Unary")
+	WalkValue(n.Value, d+1)
 }
 
 func WalkValue(n *ast.Value, d int) {
