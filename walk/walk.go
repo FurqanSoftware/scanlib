@@ -20,7 +20,7 @@ func WalkSource(n *ast.Source, d int) {
 func WalkBlock(n *ast.Block, d int) {
 	pad(d)
 	fmt.Println("Block")
-	for _, s := range n.Statement {
+	for _, s := range n.Statements {
 		WalkStatement(s, d+1)
 	}
 }
@@ -161,8 +161,8 @@ func WalkOpRelative(n *ast.OpRelative, d int) {
 	pad(d)
 	fmt.Println("OpRelative")
 	WalkOperator(n.Operator, d+1)
-	if n.Cmp != nil {
-		WalkRelative(n.Cmp, d+1)
+	if n.Relative != nil {
+		WalkRelative(n.Relative, d+1)
 	}
 }
 
@@ -181,8 +181,8 @@ func WalkOpAddition(n *ast.OpAddition, d int) {
 	pad(d)
 	fmt.Println("OpAddition")
 	WalkOperator(n.Operator, d+1)
-	if n.Term != nil {
-		WalkAddition(n.Term, d+1)
+	if n.Addition != nil {
+		WalkAddition(n.Addition, d+1)
 	}
 }
 

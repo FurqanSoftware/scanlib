@@ -5,33 +5,26 @@ import (
 	"github.com/alecthomas/participle/v2/lexer/stateful"
 )
 
-var (
-	inputLexer = stateful.MustSimple([]stateful.Rule{
-		{"Comment", `(?i)#[^\n]*`, nil},
-		{"Keyword", "end|eof|eol|for|scan|var", nil},
+var parser = participle.MustBuild(&Source{},
+	participle.Lexer(stateful.MustSimple([]stateful.Rule{
+		{"comment", `#[^\n]*`, nil},
+		{"whitespace", `[ \t]+`, nil},
 		{"String", `"(\\"|[^"])*"`, nil},
 		{"Number", `(\d*\.)?\d+`, nil},
-		{"LogicalOp", "\\|\\||&&", nil},
-		{"RelativeOp", "==|!=|<=|>=|<|>", nil},
-		{"MathOp", "[+\\-*/]", nil},
-		{"RangeOp", ":=|\\.\\.\\.", nil},
-		{"Identifier", `[a-zA-Z_]\w*`, nil},
+		{"Keyword", `end|eof|eol|for|scan|var`, nil},
+		{"Type", `\b(bool|float32|float64|int|int64|string)\b`, nil},
+		{"Ident", `[a-zA-Z_][a-zA-Z0-9_]*`, nil},
 		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`, nil},
 		{"EOL", `[\n\r]+`, nil},
-		{"whitespace", `[ \t]+`, nil},
-	})
-
-	inputParser = participle.MustBuild(&Source{},
-		participle.Lexer(inputLexer),
-		participle.Elide("Comment"),
-		participle.Unquote("String"),
-		participle.UseLookahead(2),
-	)
+	})),
+	participle.Elide("comment"),
+	participle.Unquote("String"),
+	participle.UseLookahead(2),
 )
 
 func ParseString(filename string, s string) (*Source, error) {
 	n := Source{}
-	err := inputParser.ParseString(filename, s, &n)
+	err := parser.ParseString(filename, s, &n)
 	if err != nil {
 		return nil, err
 	}

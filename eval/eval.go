@@ -2,179 +2,201 @@ package eval
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
-func Evaluate(ctx *Context, n *ast.Source) (interface{}, error) {
-	return EvaluateSource(ctx, n)
+type Evaluator struct {
+	ctx *Context
 }
 
-func EvaluateSource(ctx *Context, n *ast.Source) (interface{}, error) {
-	return EvaluateBlock(ctx, &n.Block)
-}
-
-func EvaluateBlock(ctx *Context, n *ast.Block) (interface{}, error) {
-	for _, s := range n.Statement {
-		_, err := EvaluateStatement(ctx, s)
-		if err != nil {
-			return nil, err
-		}
+func Evaluate(ctx *Context, n *ast.Source) (*Evaluator, error) {
+	e := Evaluator{
+		ctx: ctx,
 	}
-	return nil, nil
+	ast.Walk(&e, n)
+	return &e, nil
+
 }
 
-func EvaluateStatement(ctx *Context, n *ast.Statement) (interface{}, error) {
-	switch {
-	case n.VarDecl != nil:
-		return EvaluateVarDecl(ctx, n.VarDecl)
-
-	case n.ScanStmt != nil:
-		return EvaluateScanStmt(ctx, n.ScanStmt)
-
-	case n.CheckStmt != nil:
-		return EvaluateCheckStmt(ctx, n.CheckStmt)
-
-	case n.ForStmt != nil:
-		return EvaluateForStmt(ctx, n.ForStmt)
-
-	case n.EOLStmt != nil:
-		eol, err := ctx.Input.EOL()
-		if err != nil {
-			return nil, err
-		}
-		if !eol {
-			return nil, ErrExpectedEOL{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
-		}
-		return nil, nil
-
-	case n.EOFStmt != nil:
-		eof, err := ctx.Input.EOF()
-		if err != nil {
-			return nil, err
-		}
-		if !eof {
-			return nil, ErrExpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Token: ctx.Input.Scanner.Bytes()}
-		}
-		return nil, nil
+func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
+	if n == nil {
+		return nil
 	}
-	panic("unreachable")
+
+	switch n := n.(type) {
+	case *ast.Source:
+		return e
+
+	case *ast.Block:
+		return e
+
+	case *ast.Statement:
+		return e
+
+	case *ast.VarDecl:
+		e.varDecl(n)
+		return nil
+
+	case *ast.ScanStmt:
+		e.scanStmt(n)
+		return nil
+
+	case *ast.CheckStmt:
+		e.checkStmt(n)
+		return nil
+
+	case *ast.ForStmt:
+		e.forStmt(n)
+		return nil
+
+	case *ast.EOLStmt:
+		e.eolStmt(n)
+		return nil
+
+	case *ast.EOFStmt:
+		e.eofStmt(n)
+		return nil
+	}
+
+	panic(fmt.Errorf("unreachable, with %T", n))
 }
 
-func EvaluateVarDecl(ctx *Context, n *ast.VarDecl) (interface{}, error) {
+func (e *Evaluator) varDecl(n *ast.VarDecl) error {
 	for _, x := range n.VarSpec.IdentList {
 		switch {
 		case n.VarSpec.Type.TypeName != nil:
-			ctx.Values[x] = Zero(ASTType[*n.VarSpec.Type.TypeName])
+			e.ctx.Values[x] = Zero(ASTType[*n.VarSpec.Type.TypeName])
 
 		case n.VarSpec.Type.TypeLit != nil:
-			l, err := EvaluateExpression(ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
+			l, err := evalExpr(e.ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			li, ok := l.(int)
 			if !ok {
-				return nil, errors.New("invalid array bound")
+				return errors.New("invalid array bound")
 			}
-			ctx.Values[x] = MakeArray(ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName], []int{li})
+			e.ctx.Values[x] = MakeArray(ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName], []int{li})
 		}
 	}
-	return nil, nil
+	return nil
 }
 
-func EvaluateScanStmt(ctx *Context, n *ast.ScanStmt) (interface{}, error) {
+func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 	for _, f := range n.RefList {
 		indices := []int{}
 		for _, i := range f.Indices {
-			v, err := EvaluateExpression(ctx, &i)
+			v, err := evalExpr(e.ctx, &i)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			vi, ok := v.(int)
 			if !ok {
-				return nil, ErrNonIntegerIndex{Pos: Cursor{i.Pos.Line, i.Pos.Column}}
+				return ErrNonIntegerIndex{Pos: Cursor{i.Pos.Line, i.Pos.Column}}
 			}
 			indices = append(indices, vi)
 		}
-		v := ctx.GetValue(f.Identifier, indices)
+		v := e.ctx.GetValue(f.Identifier, indices)
 		var err error
 		switch v.Type {
 		case Bool:
-			v.Data, err = ctx.Input.Bool()
+			v.Data, err = e.ctx.Input.Bool()
 		case Int:
-			v.Data, err = ctx.Input.Int()
+			v.Data, err = e.ctx.Input.Int()
 		case Int64:
-			v.Data, err = ctx.Input.Int64()
+			v.Data, err = e.ctx.Input.Int64()
 		case Float32:
-			v.Data, err = ctx.Input.Float32()
+			v.Data, err = e.ctx.Input.Float32()
 		case Float64:
-			v.Data, err = ctx.Input.Float64()
+			v.Data, err = e.ctx.Input.Float64()
 		case String:
-			v.Data, err = ctx.Input.String()
+			v.Data, err = e.ctx.Input.String()
 		default:
-			return nil, ErrCantScanType{}
+			return ErrCantScanType{}
 		}
 		if err != nil {
 			if err == io.EOF {
-				return nil, ErrUnexpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+				return ErrUnexpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
 			}
-			return nil, err
+			return err
 		}
-		ctx.SetValue(f.Identifier, indices, v)
+		e.ctx.SetValue(f.Identifier, indices, v)
 	}
-	return nil, nil
+	return nil
 }
 
-func EvaluateCheckStmt(ctx *Context, n *ast.CheckStmt) (interface{}, error) {
-	for i, e := range n.ExprList {
-		v, err := EvaluateExpression(ctx, &e)
+func (e *Evaluator) checkStmt(n *ast.CheckStmt) error {
+	for i, x := range n.ExprList {
+		v, err := evalExpr(e.ctx, &x)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		vb, _ := v.(bool)
 		if !vb {
-			return nil, ErrCheckError{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Clause: i + 1}
+			return ErrCheckError{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Clause: i + 1}
 		}
 	}
-	return nil, nil
+	return nil
 }
 
-func EvaluateForStmt(ctx *Context, n *ast.ForStmt) (interface{}, error) {
-	l, err := EvaluateExpression(ctx, &n.Range.Low)
+func (e *Evaluator) forStmt(n *ast.ForStmt) error {
+	l, err := evalExpr(e.ctx, &n.Range.Low)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	li, ok := toInt(l)
 	if !ok {
-		return nil, errors.New("invalid loop bound")
+		return errors.New("invalid loop bound")
 	}
-	h, err := EvaluateExpression(ctx, &n.Range.High)
+	h, err := evalExpr(e.ctx, &n.Range.High)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	hi, ok := toInt(h)
 	if !ok {
-		return nil, errors.New("invalid loop bound")
+		return errors.New("invalid loop bound")
 	}
 	for i := li; i < hi; i++ {
-		ctx.Values[n.Range.Index] = Value{Int, i}
-
-		_, err := EvaluateBlock(ctx, &n.Block)
-		if err != nil {
-			return nil, err
-		}
+		e.ctx.Values[n.Range.Index] = Value{Int, i}
+		ast.Walk(e, &n.Block)
 	}
-	return nil, nil
+	return nil
 }
 
-func EvaluateExpression(ctx *Context, n *ast.Expression) (interface{}, error) {
-	l, err := EvaluateLogicalOr(ctx, n.Left)
+func (e *Evaluator) eolStmt(n *ast.EOLStmt) error {
+	eol, err := e.ctx.Input.EOL()
+	if err != nil {
+		return err
+	}
+	if !eol {
+		return ErrExpectedEOL{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+	}
+	return nil
+}
+
+func (e *Evaluator) eofStmt(n *ast.EOFStmt) error {
+	eof, err := e.ctx.Input.EOF()
+	if err != nil {
+		return err
+	}
+	if !eof {
+		return ErrExpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Token: e.ctx.Input.Scanner.Bytes()}
+	}
+	return nil
+}
+
+//
+
+func evalExpr(ctx *Context, n *ast.Expr) (interface{}, error) {
+	l, err := evalLogicalOr(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpLogicalOr(ctx, c, l)
+		r, err := evalOpLogicalOr(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -183,13 +205,13 @@ func EvaluateExpression(ctx *Context, n *ast.Expression) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateLogicalOr(ctx *Context, n *ast.LogicalOr) (interface{}, error) {
-	l, err := EvaluateLogicalAnd(ctx, n.Left)
+func evalLogicalOr(ctx *Context, n *ast.LogicalOr) (interface{}, error) {
+	l, err := evalLogicalAnd(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpLogicalAnd(ctx, c, l)
+		r, err := evalOpLogicalAnd(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -198,8 +220,8 @@ func EvaluateLogicalOr(ctx *Context, n *ast.LogicalOr) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateOpLogicalOr(ctx *Context, n *ast.OpLogicalOr, l interface{}) (interface{}, error) {
-	r, err := EvaluateLogicalOr(ctx, n.LogicalOr)
+func evalOpLogicalOr(ctx *Context, n *ast.OpLogicalOr, l interface{}) (interface{}, error) {
+	r, err := evalLogicalOr(ctx, n.LogicalOr)
 	if err != nil {
 		return nil, err
 	}
@@ -214,13 +236,13 @@ func EvaluateOpLogicalOr(ctx *Context, n *ast.OpLogicalOr, l interface{}) (inter
 	return nil, ErrInvalidOperation{}
 }
 
-func EvaluateLogicalAnd(ctx *Context, n *ast.LogicalAnd) (interface{}, error) {
-	l, err := EvaluateRelative(ctx, n.Left)
+func evalLogicalAnd(ctx *Context, n *ast.LogicalAnd) (interface{}, error) {
+	l, err := evalRelative(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpRelative(ctx, c, l)
+		r, err := evalOpRelative(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -229,8 +251,8 @@ func EvaluateLogicalAnd(ctx *Context, n *ast.LogicalAnd) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd, l interface{}) (interface{}, error) {
-	r, err := EvaluateLogicalAnd(ctx, n.LogicalAnd)
+func evalOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd, l interface{}) (interface{}, error) {
+	r, err := evalLogicalAnd(ctx, n.LogicalAnd)
 	if err != nil {
 		return nil, err
 	}
@@ -245,13 +267,13 @@ func EvaluateOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd, l interface{}) (int
 	return nil, ErrInvalidOperation{}
 }
 
-func EvaluateRelative(ctx *Context, n *ast.Relative) (interface{}, error) {
-	l, err := EvaluateAddition(ctx, n.Left)
+func evalRelative(ctx *Context, n *ast.Relative) (interface{}, error) {
+	l, err := evalAddition(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpAddition(ctx, c, l)
+		r, err := evalOpAddition(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -260,8 +282,8 @@ func EvaluateRelative(ctx *Context, n *ast.Relative) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}, error) {
-	r, err := EvaluateRelative(ctx, n.Cmp)
+func evalOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}, error) {
+	r, err := evalRelative(ctx, n.Relative)
 	if err != nil {
 		return nil, err
 	}
@@ -361,13 +383,13 @@ func EvaluateOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interfa
 	return nil, ErrInvalidOperation{}
 }
 
-func EvaluateAddition(ctx *Context, n *ast.Addition) (interface{}, error) {
-	l, err := EvaluateMultiplication(ctx, n.Left)
+func evalAddition(ctx *Context, n *ast.Addition) (interface{}, error) {
+	l, err := evalMultiplication(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpMultiplication(ctx, c, l)
+		r, err := evalOpMultiplication(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -376,8 +398,8 @@ func EvaluateAddition(ctx *Context, n *ast.Addition) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateOpAddition(ctx *Context, n *ast.OpAddition, l interface{}) (interface{}, error) {
-	r, err := EvaluateAddition(ctx, n.Term)
+func evalOpAddition(ctx *Context, n *ast.OpAddition, l interface{}) (interface{}, error) {
+	r, err := evalAddition(ctx, n.Addition)
 	if err != nil {
 		return nil, err
 	}
@@ -433,21 +455,21 @@ func EvaluateOpAddition(ctx *Context, n *ast.OpAddition, l interface{}) (interfa
 	return nil, ErrInvalidOperation{}
 }
 
-func EvaluateMultiplication(ctx *Context, n *ast.Multiplication) (interface{}, error) {
-	return EvaluateUnary(ctx, n.Unary)
+func evalMultiplication(ctx *Context, n *ast.Multiplication) (interface{}, error) {
+	return evalUnary(ctx, n.Unary)
 }
 
-func EvaluateOpMultiplication(ctx *Context, n *ast.OpMultiplication, l interface{}) (interface{}, error) {
+func evalOpMultiplication(ctx *Context, n *ast.OpMultiplication, l interface{}) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
+func evalUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
 	switch {
 	case n.Value != nil:
-		return EvaluatePrimary(ctx, n.Value)
+		return evalPrimary(ctx, n.Value)
 
 	case n.Negated != nil:
-		v, err := EvaluatePrimary(ctx, n.Negated)
+		v, err := evalPrimary(ctx, n.Negated)
 		if err != nil {
 			return nil, err
 		}
@@ -475,12 +497,12 @@ func EvaluateUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
 	panic("unreachable")
 }
 
-func EvaluatePrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
+func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 	switch {
 	case n.Call != nil:
 		args := []interface{}{}
 		for _, a := range n.Call.Arguments {
-			v, err := EvaluateExpression(ctx, &a)
+			v, err := evalExpr(ctx, &a)
 			if err != nil {
 				return nil, err
 			}
@@ -491,7 +513,7 @@ func EvaluatePrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 	case n.Variable != nil:
 		indices := []int{}
 		for _, i := range n.Variable.Indices {
-			v, err := EvaluateExpression(ctx, &i)
+			v, err := evalExpr(ctx, &i)
 			if err != nil {
 				return nil, err
 			}
@@ -506,8 +528,9 @@ func EvaluatePrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 		return *n.Number, nil
 	case n.String != nil:
 		return *n.String, nil
-	case n.Subexpression != nil:
-		return EvaluateExpression(ctx, n.Subexpression)
+	case n.SubExpr != nil:
+		return evalExpr(ctx, n.SubExpr)
 	}
+
 	panic("unreachable")
 }

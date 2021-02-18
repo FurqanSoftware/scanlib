@@ -37,7 +37,7 @@ func analyzeBlockScanArray(ctx *Context, n *ast.Block) {
 	oz := scanArray{}
 
 	var state = szero
-	for _, n := range n.Statement {
+	for _, n := range n.Statements {
 		switch {
 		case n.VarDecl != nil:
 			if state == szero {
@@ -99,7 +99,7 @@ func analyzeBlockScanArraySfor(ctx *Context, nfor *ast.ForStmt, oz *scanArray) (
 	var scanstmt *ast.ScanStmt
 
 	var state = szero
-	for _, n := range nfor.Block.Statement {
+	for _, n := range nfor.Block.Statements {
 		switch {
 		case n.ScanStmt != nil:
 			if state == szero {

@@ -38,7 +38,7 @@ func GenerateSource(ctx *Context, n *ast.Source) error {
 }
 
 func GenerateBlock(ctx *Context, n *ast.Block) error {
-	for _, s := range n.Statement {
+	for _, s := range n.Statements {
 		err := GenerateStatement(ctx, s)
 		if err != nil {
 			return err
@@ -228,7 +228,7 @@ func GenerateRelative(ctx *Context, n *ast.Relative) error {
 
 func GenerateOpRelative(ctx *Context, n *ast.OpRelative) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateRelative(ctx, n.Cmp)
+	return GenerateRelative(ctx, n.Relative)
 }
 
 func GenerateAddition(ctx *Context, n *ast.Addition) error {
@@ -247,7 +247,7 @@ func GenerateAddition(ctx *Context, n *ast.Addition) error {
 
 func GenerateOpAddition(ctx *Context, n *ast.OpAddition) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateAddition(ctx, n.Term)
+	return GenerateAddition(ctx, n.Addition)
 }
 
 func GenerateMultiplication(ctx *Context, n *ast.Multiplication) error {

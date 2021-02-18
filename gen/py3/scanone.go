@@ -43,7 +43,7 @@ func analyzeBlockScanOne(ctx *Context, n *ast.Block) {
 	oz := scanOne{}
 
 	var state = szero
-	for _, n := range n.Statement {
+	for _, n := range n.Statements {
 		switch {
 		case n.ScanStmt != nil:
 			if state == szero {

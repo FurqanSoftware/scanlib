@@ -6,12 +6,16 @@ import (
     "github.com/alecthomas/participle/v2/lexer"
 )
 
+type Node interface {
+    node()
+}
+
 type Source struct {
     Block Block `@@`
 }
 
 type Block struct {
-    Statement []*Statement `EOL* ( @@ ( EOL+ @@ )* ) EOL*`
+    Statements []*Statement `EOL* ( @@ ( EOL+ @@ )* ) EOL*`
 }
 
 type Statement struct {
@@ -21,8 +25,9 @@ type Statement struct {
     ScanStmt  *ScanStmt  `| @@`
     CheckStmt *CheckStmt `| @@`
     ForStmt   *ForStmt   `| @@`
-    EOLStmt   *string    `| @"eol"`
-    EOFStmt   *string    `| @"eof"`
+    // IfStmt    *IfStmt    `| @@`
+    EOLStmt *EOLStmt `| @@`
+    EOFStmt *EOFStmt `| @@`
 }
 
 type VarDecl struct {
@@ -38,21 +43,33 @@ type ScanStmt struct {
 type CheckStmt struct {
     Pos lexer.Position
 
-    ExprList []Expression `"check" @@ ( "," @@ )*`
+    ExprList []Expr `"check" @@ ( "," @@ )*`
 }
 
 type ForStmt struct {
-    Range RangeClause `"for" @@ EOL`
+    Range RangeClause `"for" @@ EOL+`
     Block Block       `@@ "end"`
 }
 
+type EOLStmt struct {
+    Pos lexer.Position
+
+    EOL bool `@"eol"`
+}
+
+type EOFStmt struct {
+    Pos lexer.Position
+
+    EOF bool `@"eof"`
+}
+
 type VarSpec struct {
-    IdentList []string `@Identifier ( "," @Identifier )*`
+    IdentList []string `@Ident ( "," @Ident )*`
     Type      Type     `@@`
 }
 
 type Type struct {
-    TypeName *string  `  @Identifier`
+    TypeName *string  `  @Type`
     TypeLit  *TypeLit `| @@`
 }
 
@@ -61,16 +78,16 @@ type TypeLit struct {
 }
 
 type ArrayType struct {
-    ArrayLength Expression `"[" @@ "]"`
-    ElementType Type       `@@`
+    ArrayLength Expr `"[" @@ "]"`
+    ElementType Type `@@`
 }
 
 type Reference struct {
-    Identifier string       `@Identifier`
-    Indices    []Expression `( "[" @@ "]" )?`
+    Identifier string `@Ident`
+    Indices    []Expr `( "[" @@ "]" )?`
 }
 
-type Expression struct {
+type Expr struct {
     Pos lexer.Position
 
     Left  *LogicalOr     `@@`
@@ -87,7 +104,7 @@ type LogicalOr struct {
 type OpLogicalOr struct {
     Pos lexer.Position
 
-    LogicalOr *LogicalOr `"||" @@`
+    LogicalOr *LogicalOr `"|" "|" @@`
 }
 
 type LogicalAnd struct {
@@ -100,7 +117,7 @@ type LogicalAnd struct {
 type OpLogicalAnd struct {
     Pos lexer.Position
 
-    LogicalAnd *LogicalAnd `"&&" @@`
+    LogicalAnd *LogicalAnd `"&" "&" @@`
 }
 
 type Relative struct {
@@ -111,8 +128,8 @@ type Relative struct {
 type OpRelative struct {
     Pos lexer.Position
 
-    Operator Operator  `@("==" | "!=" | "<=" | ">=" | "<" | ">")`
-    Cmp      *Relative `@@`
+    Operator Operator  `@("=" "=" | "!" "=" | "<" "=" | ">" "=" | "<" | ">")`
+    Relative *Relative `@@`
 }
 
 type Addition struct {
@@ -124,7 +141,7 @@ type OpAddition struct {
     Pos lexer.Position
 
     Operator Operator  `@("+" | "-")`
-    Term     *Addition `@@`
+    Addition *Addition `@@`
 }
 
 type Multiplication struct {
@@ -143,11 +160,11 @@ type Unary struct {
 }
 
 type Primary struct {
-    Number        *Number     `  @Number`
-    Call          *Call       `| @@`
-    Variable      *Variable   `| @@`
-    String        *string     `| @String`
-    Subexpression *Expression `| "(" @@ ")"`
+    Number   *Number   `  @Number`
+    Call     *Call     `| @@`
+    Variable *Variable `| @@`
+    String   *string   `| @String`
+    SubExpr  *Expr     `| "(" @@ ")"`
 }
 
 type Number string
@@ -160,17 +177,45 @@ func (o *Operator) Capture(s []string) error {
 }
 
 type RangeClause struct {
-    Index string     `@Identifier ":="`
-    Low   Expression `@@ "..."`
-    High  Expression `@@`
+    Index string `@Ident ":" "="`
+    Low   Expr   `@@ "." "." "."`
+    High  Expr   `@@`
 }
 
 type Variable struct {
-    Identifier string       `@Identifier`
-    Indices    []Expression `( "[" @@ "]" )?`
+    Identifier string `@Ident`
+    Indices    []Expr `( "[" @@ "]" )?`
 }
 
 type Call struct {
-    Name      string       `@Identifier`
-    Arguments []Expression `"(" ( @@ ( "," @@ )* )? ")"`
+    Name      string `@Ident`
+    Arguments []Expr `"(" ( @@ ( "," @@ )* )? ")"`
 }
+
+func (Source) node()           {}
+func (Block) node()            {}
+func (Statement) node()        {}
+func (VarDecl) node()          {}
+func (ScanStmt) node()         {}
+func (CheckStmt) node()        {}
+func (ForStmt) node()          {}
+func (EOLStmt) node()          {}
+func (EOFStmt) node()          {}
+func (VarSpec) node()          {}
+func (Type) node()             {}
+func (TypeLit) node()          {}
+func (ArrayType) node()        {}
+func (Reference) node()        {}
+func (Expr) node()             {}
+func (LogicalOr) node()        {}
+func (OpLogicalOr) node()      {}
+func (LogicalAnd) node()       {}
+func (OpLogicalAnd) node()     {}
+func (Relative) node()         {}
+func (OpRelative) node()       {}
+func (Addition) node()         {}
+func (OpAddition) node()       {}
+func (Multiplication) node()   {}
+func (OpMultiplication) node() {}
+func (Unary) node()            {}
+func (Primary) node()          {}

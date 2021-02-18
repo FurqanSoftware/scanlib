@@ -42,7 +42,7 @@ func analyzeBlockScanSame(ctx *Context, n *ast.Block) {
 	oz := scanSame{}
 
 	var state = szero
-	for _, n := range n.Statement {
+	for _, n := range n.Statements {
 		switch {
 		case n.VarDecl != nil:
 			if n.VarDecl.VarSpec.Type.TypeName != nil {
