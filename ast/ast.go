@@ -172,8 +172,6 @@ type BasicLit struct {
     StringLit *string  `| @String`
 }
 
-type Number string
-
 type Operator string
 
 func (o *Operator) Capture(s []string) error {

@@ -480,14 +480,6 @@ func evalUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
 			return -v, nil
 		case float64:
 			return -v, nil
-		case ast.Number:
-			vs := string(v)
-			if vs[0] != '-' {
-				vs = "-" + vs
-			} else {
-				vs = vs[1:]
-			}
-			return ast.Number(vs), nil
 		default:
 			return nil, ErrInvalidOperation{}
 		}
