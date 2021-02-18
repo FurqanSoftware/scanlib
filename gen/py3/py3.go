@@ -222,10 +222,10 @@ func GenerateOpFactor(ctx *Context, n *ast.OpFactor) error {
 }
 
 func GenerateUnary(ctx *Context, n *ast.Unary) error {
-	return GenerateValue(ctx, n.Value)
+	return GeneratePrimary(ctx, n.Value)
 }
 
-func GenerateValue(ctx *Context, n *ast.Value) error {
+func GeneratePrimary(ctx *Context, n *ast.Primary) error {
 	switch {
 	case n.Call != nil:
 

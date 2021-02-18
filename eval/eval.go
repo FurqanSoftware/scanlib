@@ -370,10 +370,10 @@ func EvaluateOpFactor(ctx *Context, n *ast.OpFactor, l interface{}) (interface{}
 func EvaluateUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
 	switch {
 	case n.Value != nil:
-		return EvaluateValue(ctx, n.Value)
+		return EvaluatePrimary(ctx, n.Value)
 
 	case n.Negated != nil:
-		v, err := EvaluateValue(ctx, n.Negated)
+		v, err := EvaluatePrimary(ctx, n.Negated)
 		if err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func EvaluateUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
 	panic("unreachable")
 }
 
-func EvaluateValue(ctx *Context, n *ast.Value) (interface{}, error) {
+func EvaluatePrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 	switch {
 	case n.Call != nil:
 		args := []interface{}{}

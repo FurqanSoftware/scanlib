@@ -102,8 +102,8 @@ type OpTerm struct {
 }
 
 type Factor struct {
-	Unary    *Unary `@@`
-	Exponent *Value `( "^" @@ )?`
+	Unary    *Unary   `@@`
+	Exponent *Primary `( "^" @@ )?`
 }
 
 type OpFactor struct {
@@ -112,11 +112,11 @@ type OpFactor struct {
 }
 
 type Unary struct {
-	Value   *Value `( "+"? @@`
-	Negated *Value `| "-" @@ )`
+	Value   *Primary `( "+"? @@`
+	Negated *Primary `| "-" @@ )`
 }
 
-type Value struct {
+type Primary struct {
 	Number        *Number     `  @Number`
 	Call          *Call       `| @@`
 	Variable      *Variable   `| @@`
