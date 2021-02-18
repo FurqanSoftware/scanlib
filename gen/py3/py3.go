@@ -120,7 +120,7 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 	g.ctx.linevar = true
 	g.ctx.cw.Println("if _ == None: _ = input().split()")
 	for _, f := range n.RefList {
-		g.ctx.cw.Printf("%s", f.Identifier)
+		g.ctx.cw.Printf("%s", f.Ident)
 		for _, i := range f.Indices {
 			g.ctx.cw.Print("[")
 			err := genExpr(g.ctx, &i)
@@ -129,7 +129,7 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 			}
 			g.ctx.cw.Print("]")
 		}
-		g.ctx.cw.Printf(" = %s(_.pop(0))", g.ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))])
+		g.ctx.cw.Printf(" = %s(_.pop(0))", g.ctx.types[f.Ident+strings.Repeat("[]", len(f.Indices))])
 		g.ctx.cw.Println()
 	}
 	return nil
@@ -273,22 +273,35 @@ func genUnary(ctx *Context, n *ast.Unary) error {
 
 func genPrimary(ctx *Context, n *ast.Primary) error {
 	switch {
-	case n.Call != nil:
+	case n.CallExpr != nil:
 
 	case n.Variable != nil:
-		ctx.cw.Printf(n.Variable.Identifier)
+		ctx.cw.Printf(n.Variable.Ident)
 		return nil
 
-	case n.Number != nil:
-		ctx.cw.Printf("%s", *n.Number)
-		return nil
-
-	case n.String != nil:
-		ctx.cw.Printf("%q", *n.String)
-		return nil
+	case n.BasicLit != nil:
+		return genBasicLit(ctx, n.BasicLit)
 
 	case n.SubExpr != nil:
 		return genExpr(ctx, n.SubExpr)
 	}
+	panic("unreachable")
+}
+
+func genBasicLit(ctx *Context, n *ast.BasicLit) error {
+	switch {
+	case n.FloatLit != nil:
+		ctx.cw.Printf("%f", *n.FloatLit)
+		return nil
+
+	case n.IntLit != nil:
+		ctx.cw.Printf("%d", *n.IntLit)
+		return nil
+
+	case n.StringLit != nil:
+		ctx.cw.Printf("%q", *n.StringLit)
+		return nil
+	}
+
 	panic("unreachable")
 }

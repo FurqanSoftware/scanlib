@@ -99,7 +99,7 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 			}
 			indices = append(indices, vi)
 		}
-		v := e.ctx.GetValue(f.Identifier, indices)
+		v := e.ctx.GetValue(f.Ident, indices)
 		var err error
 		switch v.Type {
 		case Bool:
@@ -123,7 +123,7 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 			}
 			return err
 		}
-		e.ctx.SetValue(f.Identifier, indices, v)
+		e.ctx.SetValue(f.Ident, indices, v)
 	}
 	return nil
 }
@@ -497,16 +497,16 @@ func evalUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
 
 func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 	switch {
-	case n.Call != nil:
+	case n.CallExpr != nil:
 		args := []interface{}{}
-		for _, a := range n.Call.Arguments {
+		for _, a := range n.CallExpr.Args {
 			v, err := evalExpr(ctx, &a)
 			if err != nil {
 				return nil, err
 			}
 			args = append(args, v)
 		}
-		return Functions[n.Call.Name](args...)
+		return Functions[n.CallExpr.Ident](args...)
 
 	case n.Variable != nil:
 		indices := []int{}
@@ -521,13 +521,28 @@ func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 			}
 			indices = append(indices, vi)
 		}
-		return ctx.GetValue(n.Variable.Identifier, indices).Data, nil
-	case n.Number != nil:
-		return *n.Number, nil
-	case n.String != nil:
-		return *n.String, nil
+		return ctx.GetValue(n.Variable.Ident, indices).Data, nil
+
+	case n.BasicLit != nil:
+		return evalBasicLit(ctx, n.BasicLit)
+
 	case n.SubExpr != nil:
 		return evalExpr(ctx, n.SubExpr)
+	}
+
+	panic("unreachable")
+}
+
+func evalBasicLit(ctx *Context, n *ast.BasicLit) (interface{}, error) {
+	switch {
+	case n.FloatLit != nil:
+		return *n.FloatLit, nil
+
+	case n.IntLit != nil:
+		return *n.IntLit, nil
+
+	case n.StringLit != nil:
+		return *n.StringLit, nil
 	}
 
 	panic("unreachable")

@@ -14,7 +14,7 @@ type scanOne struct {
 }
 
 func (o scanOne) Generate(ctx *Context) error {
-	ctx.cw.Print(o.scanStmt.RefList[0].Identifier)
+	ctx.cw.Print(o.scanStmt.RefList[0].Ident)
 	for _, i := range o.scanStmt.RefList[0].Indices {
 		ctx.cw.Print("[")
 		err := genExpr(ctx, &i)
@@ -23,7 +23,7 @@ func (o scanOne) Generate(ctx *Context) error {
 		}
 		ctx.cw.Print("]")
 	}
-	t := ctx.types[o.scanStmt.RefList[0].Identifier+strings.Repeat("[]", len(o.scanStmt.RefList[0].Indices))]
+	t := ctx.types[o.scanStmt.RefList[0].Ident+strings.Repeat("[]", len(o.scanStmt.RefList[0].Indices))]
 	if t == "string" {
 		ctx.cw.Printf(" = input()")
 	} else {

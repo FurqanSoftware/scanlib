@@ -18,7 +18,7 @@ func (o scanArray) Generate(ctx *Context) error {
 		if i > 0 {
 			ctx.cw.Print(", ")
 		}
-		ctx.cw.Printf("%s", x.Identifier)
+		ctx.cw.Printf("%s", x.Ident)
 	}
 	t := ASTType[*o.varDecl.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName]
 	ctx.cw.Printf(" = map(%s, input().split())", t)
@@ -55,7 +55,7 @@ func analyzeBlockScanArray(ctx *Context, n *ast.Block) {
 
 		case n.ForStmt != nil:
 			if state == svar &&
-				exprEqNumber(&n.ForStmt.Range.Low, "0") &&
+				exprEqInt64(&n.ForStmt.Range.Low, 0) &&
 				exprEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.ForStmt.Range.High) {
 				scanstmt, ok := analyzeBlockScanArraySfor(ctx, n.ForStmt, &oz)
 				if ok {
@@ -104,7 +104,7 @@ func analyzeBlockScanArraySfor(ctx *Context, nfor *ast.ForStmt, oz *scanArray) (
 		case n.ScanStmt != nil:
 			if state == szero {
 				if len(n.ScanStmt.RefList) == 1 &&
-					n.ScanStmt.RefList[0].Identifier == oz.varDecl.VarSpec.IdentList[0] &&
+					n.ScanStmt.RefList[0].Ident == oz.varDecl.VarSpec.IdentList[0] &&
 					len(n.ScanStmt.RefList[0].Indices) == 1 &&
 					exprEqVar(&n.ScanStmt.RefList[0].Indices[0], nfor.Range.Index) {
 					state = sscan
@@ -143,8 +143,8 @@ func exprEqVar(a *ast.Expr, b string) bool {
 	return av == b
 }
 
-func exprEqNumber(a *ast.Expr, b string) bool {
-	av, ok := exprNumber(a)
+func exprEqInt64(a *ast.Expr, b int64) bool {
+	av, ok := exprInt64(a)
 	if !ok {
 		return false
 	}
@@ -161,12 +161,12 @@ func exprVar(e *ast.Expr) (string, bool) {
 		e.Left.Left.Left.Left.Left.Unary.Value != nil &&
 		e.Left.Left.Left.Left.Left.Unary.Value.Variable != nil &&
 		len(e.Left.Left.Left.Left.Left.Unary.Value.Variable.Indices) == 0 {
-		return e.Left.Left.Left.Left.Left.Unary.Value.Variable.Identifier, true
+		return e.Left.Left.Left.Left.Left.Unary.Value.Variable.Ident, true
 	}
 	return "", false
 }
 
-func exprNumber(e *ast.Expr) (string, bool) {
+func exprInt64(e *ast.Expr) (int64, bool) {
 	if len(e.Right) == 0 &&
 		len(e.Left.Right) == 0 &&
 		len(e.Left.Left.Right) == 0 &&
@@ -175,8 +175,9 @@ func exprNumber(e *ast.Expr) (string, bool) {
 		e.Left.Left.Left.Left.Left.Exponent == nil &&
 		e.Left.Left.Left.Left.Left.Unary != nil &&
 		e.Left.Left.Left.Left.Left.Unary.Value != nil &&
-		e.Left.Left.Left.Left.Left.Unary.Value.Number != nil {
-		return string(*e.Left.Left.Left.Left.Left.Unary.Value.Number), true
+		e.Left.Left.Left.Left.Left.Unary.Value.BasicLit != nil &&
+		e.Left.Left.Left.Left.Left.Unary.Value.BasicLit.IntLit != nil {
+		return *e.Left.Left.Left.Left.Left.Unary.Value.BasicLit.IntLit, true
 	}
-	return "", false
+	return 0, false
 }

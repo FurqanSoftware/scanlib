@@ -15,7 +15,7 @@ func (o scanSame) Generate(ctx *Context) error {
 		if i > 0 {
 			ctx.cw.Print(", ")
 		}
-		ctx.cw.Printf("%s", x.Identifier)
+		ctx.cw.Printf("%s", x.Ident)
 	}
 	t := ASTType[*o.varDecl.VarSpec.Type.TypeName]
 	if len(o.scanStmt.RefList) == 1 {
@@ -58,7 +58,7 @@ func analyzeBlockScanSame(ctx *Context, n *ast.Block) {
 					idents[x] = true
 				}
 				for _, r := range n.ScanStmt.RefList {
-					if !idents[r.Identifier] && len(r.Indices) > 0 {
+					if !idents[r.Ident] && len(r.Indices) > 0 {
 						intersect = false
 					}
 				}

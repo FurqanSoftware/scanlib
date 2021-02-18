@@ -83,8 +83,8 @@ type ArrayType struct {
 }
 
 type Reference struct {
-    Identifier string `@Ident`
-    Indices    []Expr `( "[" @@ "]" )?`
+    Ident   string `@Ident`
+    Indices []Expr `( "[" @@ "]" )?`
 }
 
 type Expr struct {
@@ -160,11 +160,16 @@ type Unary struct {
 }
 
 type Primary struct {
-    Number   *Number   `  @Number`
-    Call     *Call     `| @@`
+    BasicLit *BasicLit `  @@`
+    CallExpr *CallExpr `| @@`
     Variable *Variable `| @@`
-    String   *string   `| @String`
     SubExpr  *Expr     `| "(" @@ ")"`
+}
+
+type BasicLit struct {
+    FloatLit  *float64 `  @Float`
+    IntLit    *int64   `| @Int`
+    StringLit *string  `| @String`
 }
 
 type Number string
@@ -183,13 +188,13 @@ type RangeClause struct {
 }
 
 type Variable struct {
-    Identifier string `@Ident`
-    Indices    []Expr `( "[" @@ "]" )?`
+    Ident   string `@Ident`
+    Indices []Expr `( "[" @@ "]" )?`
 }
 
-type Call struct {
-    Name      string `@Ident`
-    Arguments []Expr `"(" ( @@ ( "," @@ )* )? ")"`
+type CallExpr struct {
+    Ident string `@Ident`
+    Args  []Expr `"(" ( @@ ( "," @@ )* )? ")"`
 }
 
 func (Source) node()           {}

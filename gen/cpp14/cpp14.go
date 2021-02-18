@@ -139,7 +139,7 @@ func (g *Generator) varDecl(n *ast.VarDecl) error {
 
 func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 	for _, f := range n.RefList {
-		g.ctx.cw.Printf("cin >> %s", f.Identifier)
+		g.ctx.cw.Printf("cin >> %s", f.Ident)
 		for _, i := range f.Indices {
 			g.ctx.cw.Print("[")
 			err := genExpr(g.ctx, &i)
@@ -280,7 +280,7 @@ func genUnary(ctx *Context, n *ast.Unary) error {
 
 func genPrimary(ctx *Context, n *ast.Primary) error {
 	switch {
-	case n.Call != nil:
+	case n.CallExpr != nil:
 		// args := []interface{}{}
 		// for _, a := range n.Call.Arguments {
 		// 	v, err := genExpr(ctx, &a)
@@ -305,19 +305,32 @@ func genPrimary(ctx *Context, n *ast.Primary) error {
 		// 	indices = append(indices, vi)
 		// }
 		// return ctx.GetValue(n.Variable.Identifier, indices).Data, nil
-		ctx.cw.Printf(n.Variable.Identifier)
+		ctx.cw.Printf(n.Variable.Ident)
 		return nil
 
-	case n.Number != nil:
-		ctx.cw.Printf("%s", *n.Number)
-		return nil
-
-	case n.String != nil:
-		ctx.cw.Printf("%q", *n.String)
-		return nil
+	case n.BasicLit != nil:
+		return genBasicLit(ctx, n.BasicLit)
 
 	case n.SubExpr != nil:
 		return genExpr(ctx, n.SubExpr)
 	}
+	panic("unreachable")
+}
+
+func genBasicLit(ctx *Context, n *ast.BasicLit) error {
+	switch {
+	case n.FloatLit != nil:
+		ctx.cw.Printf("%f", *n.FloatLit)
+		return nil
+
+	case n.IntLit != nil:
+		ctx.cw.Printf("%d", *n.IntLit)
+		return nil
+
+	case n.StringLit != nil:
+		ctx.cw.Printf("%q", *n.StringLit)
+		return nil
+	}
+
 	panic("unreachable")
 }
