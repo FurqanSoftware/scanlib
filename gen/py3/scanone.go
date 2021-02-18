@@ -10,14 +10,14 @@ import (
 
 type scanOne struct {
 	scanStmt *ast.ScanStmt
-	eolStmt  *string
+	eolStmt  *ast.EOLStmt
 }
 
 func (o scanOne) Generate(ctx *Context) error {
 	ctx.cw.Print(o.scanStmt.RefList[0].Identifier)
 	for _, i := range o.scanStmt.RefList[0].Indices {
 		ctx.cw.Print("[")
-		err := GenerateExpression(ctx, &i)
+		err := genExpr(ctx, &i)
 		if err != nil {
 			return err
 		}

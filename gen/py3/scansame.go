@@ -7,7 +7,7 @@ import "git.furqansoftware.net/toph/scanlib/ast"
 type scanSame struct {
 	varDecl  *ast.VarDecl
 	scanStmt *ast.ScanStmt
-	eolStmt  *string
+	eolStmt  *ast.EOLStmt
 }
 
 func (o scanSame) Generate(ctx *Context) error {

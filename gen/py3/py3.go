@@ -4,11 +4,16 @@ package py3
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 	"git.furqansoftware.net/toph/scanlib/gen/code"
 )
+
+type Generator struct {
+	ctx *Context
+}
 
 func Generate(n *ast.Source) ([]byte, error) {
 	ctx := Context{
@@ -19,10 +24,11 @@ func Generate(n *ast.Source) ([]byte, error) {
 
 	analyzeSource(&ctx, n)
 
-	err := GenerateSource(&ctx, n)
-	if err != nil {
-		return nil, err
+	g := Generator{
+		ctx: &ctx,
 	}
+
+	ast.Walk(&g, n)
 
 	r := bytes.Buffer{}
 	if ctx.linevar {
@@ -33,140 +39,142 @@ func Generate(n *ast.Source) ([]byte, error) {
 	return r.Bytes(), nil
 }
 
-func GenerateSource(ctx *Context, n *ast.Source) error {
-	return GenerateBlock(ctx, &n.Block)
-}
-
-func GenerateBlock(ctx *Context, n *ast.Block) error {
-	for _, s := range n.Statements {
-		err := GenerateStatement(ctx, s)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func GenerateStatement(ctx *Context, n *ast.Statement) error {
-	switch {
-	case n.VarDecl != nil:
-		return GenerateVarDecl(ctx, n.VarDecl)
-
-	case n.ScanStmt != nil:
-		return GenerateScanStmt(ctx, n.ScanStmt)
-
-	case n.CheckStmt != nil:
-		return GenerateCheckStmt(ctx, n.CheckStmt)
-
-	case n.ForStmt != nil:
-		return GenerateForStmt(ctx, n.ForStmt)
-
-	case n.EOLStmt != nil:
-		oz, ok := ctx.ozs[n.EOLStmt]
-		if ok {
-			return oz.Generate(ctx)
-		}
-
-		ctx.cw.Println("_ = None")
-		return nil
-
-	case n.EOFStmt != nil:
+func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
+	if n == nil {
 		return nil
 	}
-	panic("unreachable")
+
+	switch n := n.(type) {
+	case *ast.Source:
+		return g
+
+	case *ast.Block:
+		return g
+
+	case *ast.Statement:
+		return g
+
+	case *ast.VarDecl:
+		g.varDecl(n)
+		return nil
+
+	case *ast.ScanStmt:
+		g.scanStmt(n)
+		return nil
+
+	case *ast.CheckStmt:
+		return g
+
+	case *ast.ForStmt:
+		g.forStmt(n)
+		return nil
+
+	case *ast.EOLStmt:
+		g.eolStmt(n)
+		return nil
+
+	case *ast.EOFStmt:
+		return g
+	}
+
+	panic(fmt.Errorf("unreachable, with %T", n))
 }
 
-func GenerateVarDecl(ctx *Context, n *ast.VarDecl) error {
+func (g *Generator) varDecl(n *ast.VarDecl) error {
 	switch {
 	case n.VarSpec.Type.TypeName != nil:
 		t := ASTType[*n.VarSpec.Type.TypeName]
 		for _, x := range n.VarSpec.IdentList {
-			ctx.types[x] = t
+			g.ctx.types[x] = t
 		}
 
 	case n.VarSpec.Type.TypeLit != nil:
 		t := ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName]
 
 		for _, x := range n.VarSpec.IdentList {
-			ctx.types[x] = "array"
-			ctx.types[x+"[]"] = t
+			g.ctx.types[x] = "array"
+			g.ctx.types[x+"[]"] = t
 
-			oz, ok := ctx.ozs[n]
+			oz, ok := g.ctx.ozs[n]
 			if ok {
-				return oz.Generate(ctx)
+				return oz.Generate(g.ctx)
 			} else {
-				ctx.cw.Printf("%s = [%s] * ", x, ASTZero[t])
-				err := GenerateExpression(ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
+				g.ctx.cw.Printf("%s = [%s] * ", x, ASTZero[t])
+				err := genExpr(g.ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
 				if err != nil {
 					return err
 				}
-				ctx.cw.Println()
+				g.ctx.cw.Println()
 			}
 		}
 	}
-
 	return nil
 }
 
-func GenerateScanStmt(ctx *Context, n *ast.ScanStmt) error {
-	oz, ok := ctx.ozs[n]
+func (g *Generator) scanStmt(n *ast.ScanStmt) error {
+	oz, ok := g.ctx.ozs[n]
 	if ok {
-		return oz.Generate(ctx)
+		return oz.Generate(g.ctx)
 	}
 
-	ctx.linevar = true
-	ctx.cw.Println("if _ == None: _ = input().split()")
+	g.ctx.linevar = true
+	g.ctx.cw.Println("if _ == None: _ = input().split()")
 	for _, f := range n.RefList {
-		ctx.cw.Printf("%s", f.Identifier)
+		g.ctx.cw.Printf("%s", f.Identifier)
 		for _, i := range f.Indices {
-			ctx.cw.Print("[")
-			err := GenerateExpression(ctx, &i)
+			g.ctx.cw.Print("[")
+			err := genExpr(g.ctx, &i)
 			if err != nil {
 				return err
 			}
-			ctx.cw.Print("]")
+			g.ctx.cw.Print("]")
 		}
-		ctx.cw.Printf(" = %s(_.pop(0))", ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))])
-		ctx.cw.Println()
+		g.ctx.cw.Printf(" = %s(_.pop(0))", g.ctx.types[f.Identifier+strings.Repeat("[]", len(f.Indices))])
+		g.ctx.cw.Println()
 	}
 	return nil
 }
 
-func GenerateCheckStmt(ctx *Context, n *ast.CheckStmt) error {
-	return nil
-}
-
-func GenerateForStmt(ctx *Context, n *ast.ForStmt) error {
-	oz, ok := ctx.ozs[n]
+func (g *Generator) forStmt(n *ast.ForStmt) error {
+	oz, ok := g.ctx.ozs[n]
 	if ok {
-		return oz.Generate(ctx)
+		return oz.Generate(g.ctx)
 	}
 
-	ctx.cw.Printf("for %s in range(", n.Range.Index)
-	err := GenerateExpression(ctx, &n.Range.Low)
+	g.ctx.cw.Printf("for %s in range(", n.Range.Index)
+	err := genExpr(g.ctx, &n.Range.Low)
 	if err != nil {
 		return err
 	}
-	ctx.cw.Print(", ")
-	err = GenerateExpression(ctx, &n.Range.High)
+	g.ctx.cw.Print(", ")
+	err = genExpr(g.ctx, &n.Range.High)
 	if err != nil {
 		return err
 	}
-	ctx.cw.Printf("):")
-	ctx.cw.Println()
-	ctx.cw.Indent(1)
-	GenerateBlock(ctx, &n.Block)
-	ctx.cw.Indent(-1)
+	g.ctx.cw.Printf("):")
+	g.ctx.cw.Println()
+	g.ctx.cw.Indent(1)
+	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
 	return nil
 }
 
-func GenerateExpression(ctx *Context, n *ast.Expression) error {
-	err := GenerateLogicalOr(ctx, n.Left)
+func (g *Generator) eolStmt(n *ast.EOLStmt) error {
+	oz, ok := g.ctx.ozs[n]
+	if ok {
+		return oz.Generate(g.ctx)
+	}
+	g.ctx.cw.Println("_ = None")
+	return nil
+}
+
+func genExpr(ctx *Context, n *ast.Expr) error {
+	err := genLogicalOr(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpLogicalOr(ctx, c)
+		err := genOpLogicalOr(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -174,13 +182,13 @@ func GenerateExpression(ctx *Context, n *ast.Expression) error {
 	return nil
 }
 
-func GenerateLogicalOr(ctx *Context, n *ast.LogicalOr) error {
-	err := GenerateLogicalAnd(ctx, n.Left)
+func genLogicalOr(ctx *Context, n *ast.LogicalOr) error {
+	err := genLogicalAnd(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpLogicalAnd(ctx, c)
+		err := genOpLogicalAnd(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -188,18 +196,18 @@ func GenerateLogicalOr(ctx *Context, n *ast.LogicalOr) error {
 	return nil
 }
 
-func GenerateOpLogicalOr(ctx *Context, n *ast.OpLogicalOr) error {
+func genOpLogicalOr(ctx *Context, n *ast.OpLogicalOr) error {
 	ctx.cw.Print("||")
-	return GenerateLogicalOr(ctx, n.LogicalOr)
+	return genLogicalOr(ctx, n.LogicalOr)
 }
 
-func GenerateLogicalAnd(ctx *Context, n *ast.LogicalAnd) error {
-	err := GenerateRelative(ctx, n.Left)
+func genLogicalAnd(ctx *Context, n *ast.LogicalAnd) error {
+	err := genRelative(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpRelative(ctx, c)
+		err := genOpRelative(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -207,18 +215,18 @@ func GenerateLogicalAnd(ctx *Context, n *ast.LogicalAnd) error {
 	return nil
 }
 
-func GenerateOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd) error {
+func genOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd) error {
 	ctx.cw.Print("&&")
-	return GenerateLogicalAnd(ctx, n.LogicalAnd)
+	return genLogicalAnd(ctx, n.LogicalAnd)
 }
 
-func GenerateRelative(ctx *Context, n *ast.Relative) error {
-	err := GenerateAddition(ctx, n.Left)
+func genRelative(ctx *Context, n *ast.Relative) error {
+	err := genAddition(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpAddition(ctx, c)
+		err := genOpAddition(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -226,18 +234,18 @@ func GenerateRelative(ctx *Context, n *ast.Relative) error {
 	return nil
 }
 
-func GenerateOpRelative(ctx *Context, n *ast.OpRelative) error {
+func genOpRelative(ctx *Context, n *ast.OpRelative) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateRelative(ctx, n.Relative)
+	return genRelative(ctx, n.Relative)
 }
 
-func GenerateAddition(ctx *Context, n *ast.Addition) error {
-	err := GenerateMultiplication(ctx, n.Left)
+func genAddition(ctx *Context, n *ast.Addition) error {
+	err := genMultiplication(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpMultiplication(ctx, c)
+		err := genOpMultiplication(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -245,25 +253,25 @@ func GenerateAddition(ctx *Context, n *ast.Addition) error {
 	return nil
 }
 
-func GenerateOpAddition(ctx *Context, n *ast.OpAddition) error {
+func genOpAddition(ctx *Context, n *ast.OpAddition) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateAddition(ctx, n.Addition)
+	return genAddition(ctx, n.Addition)
 }
 
-func GenerateMultiplication(ctx *Context, n *ast.Multiplication) error {
-	return GenerateUnary(ctx, n.Unary)
+func genMultiplication(ctx *Context, n *ast.Multiplication) error {
+	return genUnary(ctx, n.Unary)
 }
 
-func GenerateOpMultiplication(ctx *Context, n *ast.OpMultiplication) error {
+func genOpMultiplication(ctx *Context, n *ast.OpMultiplication) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateMultiplication(ctx, n.Factor)
+	return genMultiplication(ctx, n.Factor)
 }
 
-func GenerateUnary(ctx *Context, n *ast.Unary) error {
-	return GeneratePrimary(ctx, n.Value)
+func genUnary(ctx *Context, n *ast.Unary) error {
+	return genPrimary(ctx, n.Value)
 }
 
-func GeneratePrimary(ctx *Context, n *ast.Primary) error {
+func genPrimary(ctx *Context, n *ast.Primary) error {
 	switch {
 	case n.Call != nil:
 
@@ -279,8 +287,8 @@ func GeneratePrimary(ctx *Context, n *ast.Primary) error {
 		ctx.cw.Printf("%q", *n.String)
 		return nil
 
-	case n.Subexpression != nil:
-		return GenerateExpression(ctx, n.Subexpression)
+	case n.SubExpr != nil:
+		return genExpr(ctx, n.SubExpr)
 	}
 	panic("unreachable")
 }

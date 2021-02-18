@@ -10,7 +10,7 @@ type scanArray struct {
 	varDecl  *ast.VarDecl
 	forStmt  *ast.ForStmt
 	scanStmt *ast.ScanStmt
-	eolStmt  *string
+	eolStmt  *ast.EOLStmt
 }
 
 func (o scanArray) Generate(ctx *Context) error {
@@ -55,8 +55,8 @@ func analyzeBlockScanArray(ctx *Context, n *ast.Block) {
 
 		case n.ForStmt != nil:
 			if state == svar &&
-				expressionEqNumber(&n.ForStmt.Range.Low, "0") &&
-				expressionEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.ForStmt.Range.High) {
+				exprEqNumber(&n.ForStmt.Range.Low, "0") &&
+				exprEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.ForStmt.Range.High) {
 				scanstmt, ok := analyzeBlockScanArraySfor(ctx, n.ForStmt, &oz)
 				if ok {
 					state = sfor
@@ -106,7 +106,7 @@ func analyzeBlockScanArraySfor(ctx *Context, nfor *ast.ForStmt, oz *scanArray) (
 				if len(n.ScanStmt.RefList) == 1 &&
 					n.ScanStmt.RefList[0].Identifier == oz.varDecl.VarSpec.IdentList[0] &&
 					len(n.ScanStmt.RefList[0].Indices) == 1 &&
-					expressionEqVariable(&n.ScanStmt.RefList[0].Indices[0], nfor.Range.Index) {
+					exprEqVar(&n.ScanStmt.RefList[0].Indices[0], nfor.Range.Index) {
 					state = sscan
 					scanstmt = n.ScanStmt
 				}
@@ -123,27 +123,27 @@ func analyzeBlockScanArraySfor(ctx *Context, nfor *ast.ForStmt, oz *scanArray) (
 	return scanstmt, true
 }
 
-func expressionEq(a, b *ast.Expression) bool {
-	av, ok := expressionVariable(a)
+func exprEq(a, b *ast.Expr) bool {
+	av, ok := exprVar(a)
 	if !ok {
 		return false
 	}
-	bv, ok := expressionVariable(b)
+	bv, ok := exprVar(b)
 	if !ok {
 		return false
 	}
 	return av == bv
 }
 
-func expressionEqVariable(a *ast.Expression, b string) bool {
-	av, ok := expressionVariable(a)
+func exprEqVar(a *ast.Expr, b string) bool {
+	av, ok := exprVar(a)
 	if !ok {
 		return false
 	}
 	return av == b
 }
 
-func expressionEqNumber(a *ast.Expression, b string) bool {
+func exprEqNumber(a *ast.Expr, b string) bool {
 	av, ok := exprNumber(a)
 	if !ok {
 		return false
@@ -151,7 +151,7 @@ func expressionEqNumber(a *ast.Expression, b string) bool {
 	return av == b
 }
 
-func expressionVariable(e *ast.Expression) (string, bool) {
+func exprVar(e *ast.Expr) (string, bool) {
 	if len(e.Right) == 0 &&
 		len(e.Left.Right) == 0 &&
 		len(e.Left.Left.Right) == 0 &&
@@ -166,7 +166,7 @@ func expressionVariable(e *ast.Expression) (string, bool) {
 	return "", false
 }
 
-func exprNumber(e *ast.Expression) (string, bool) {
+func exprNumber(e *ast.Expr) (string, bool) {
 	if len(e.Right) == 0 &&
 		len(e.Left.Right) == 0 &&
 		len(e.Left.Left.Right) == 0 &&

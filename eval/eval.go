@@ -188,8 +188,6 @@ func (e *Evaluator) eofStmt(n *ast.EOFStmt) error {
 	return nil
 }
 
-//
-
 func evalExpr(ctx *Context, n *ast.Expr) (interface{}, error) {
 	l, err := evalLogicalOr(ctx, n.Left)
 	if err != nil {
