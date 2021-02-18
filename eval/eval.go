@@ -169,12 +169,12 @@ func EvaluateForStmt(ctx *Context, n *ast.ForStmt) (interface{}, error) {
 }
 
 func EvaluateExpression(ctx *Context, n *ast.Expression) (interface{}, error) {
-	l, err := EvaluateCmp(ctx, n.Left)
+	l, err := EvaluateLogicalOr(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpCmp(ctx, c, l)
+		r, err := EvaluateOpLogicalOr(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -183,13 +183,13 @@ func EvaluateExpression(ctx *Context, n *ast.Expression) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateCmp(ctx *Context, n *ast.Cmp) (interface{}, error) {
-	l, err := EvaluateTerm(ctx, n.Left)
+func EvaluateLogicalOr(ctx *Context, n *ast.LogicalOr) (interface{}, error) {
+	l, err := EvaluateLogicalAnd(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpTerm(ctx, c, l)
+		r, err := EvaluateOpLogicalAnd(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -198,12 +198,86 @@ func EvaluateCmp(ctx *Context, n *ast.Cmp) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateOpCmp(ctx *Context, n *ast.OpCmp, l interface{}) (interface{}, error) {
-	r, err := EvaluateCmp(ctx, n.Cmp)
+func EvaluateOpLogicalOr(ctx *Context, n *ast.OpLogicalOr, l interface{}) (interface{}, error) {
+	r, err := EvaluateLogicalOr(ctx, n.LogicalOr)
 	if err != nil {
 		return nil, err
 	}
 	switch l := l.(type) {
+	case bool:
+		ri, ok := toBool(r)
+		if !ok {
+			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+		}
+		return l || ri, nil
+	}
+	return nil, ErrInvalidOperation{}
+}
+
+func EvaluateLogicalAnd(ctx *Context, n *ast.LogicalAnd) (interface{}, error) {
+	l, err := EvaluateRelative(ctx, n.Left)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range n.Right {
+		r, err := EvaluateOpRelative(ctx, c, l)
+		if err != nil {
+			return nil, err
+		}
+		l = r
+	}
+	return l, nil
+}
+
+func EvaluateOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd, l interface{}) (interface{}, error) {
+	r, err := EvaluateLogicalAnd(ctx, n.LogicalAnd)
+	if err != nil {
+		return nil, err
+	}
+	switch l := l.(type) {
+	case bool:
+		ri, ok := toBool(r)
+		if !ok {
+			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+		}
+		return l && ri, nil
+	}
+	return nil, ErrInvalidOperation{}
+}
+
+func EvaluateRelative(ctx *Context, n *ast.Relative) (interface{}, error) {
+	l, err := EvaluateAddition(ctx, n.Left)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range n.Right {
+		r, err := EvaluateOpAddition(ctx, c, l)
+		if err != nil {
+			return nil, err
+		}
+		l = r
+	}
+	return l, nil
+}
+
+func EvaluateOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}, error) {
+	r, err := EvaluateRelative(ctx, n.Cmp)
+	if err != nil {
+		return nil, err
+	}
+	switch l := l.(type) {
+	case bool:
+		ri, ok := toBool(r)
+		if !ok {
+			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+		}
+		switch n.Operator {
+		case "==":
+			return l == ri, nil
+		case "!=":
+			return l != ri, nil
+		}
+
 	case int:
 		ri, ok := toInt(r)
 		if !ok {
@@ -287,13 +361,13 @@ func EvaluateOpCmp(ctx *Context, n *ast.OpCmp, l interface{}) (interface{}, erro
 	return nil, ErrInvalidOperation{}
 }
 
-func EvaluateTerm(ctx *Context, n *ast.Term) (interface{}, error) {
-	l, err := EvaluateFactor(ctx, n.Left)
+func EvaluateAddition(ctx *Context, n *ast.Addition) (interface{}, error) {
+	l, err := EvaluateMultiplication(ctx, n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := EvaluateOpFactor(ctx, c, l)
+		r, err := EvaluateOpMultiplication(ctx, c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -302,8 +376,8 @@ func EvaluateTerm(ctx *Context, n *ast.Term) (interface{}, error) {
 	return l, nil
 }
 
-func EvaluateOpTerm(ctx *Context, n *ast.OpTerm, l interface{}) (interface{}, error) {
-	r, err := EvaluateTerm(ctx, n.Term)
+func EvaluateOpAddition(ctx *Context, n *ast.OpAddition, l interface{}) (interface{}, error) {
+	r, err := EvaluateAddition(ctx, n.Term)
 	if err != nil {
 		return nil, err
 	}
@@ -359,11 +433,11 @@ func EvaluateOpTerm(ctx *Context, n *ast.OpTerm, l interface{}) (interface{}, er
 	return nil, ErrInvalidOperation{}
 }
 
-func EvaluateFactor(ctx *Context, n *ast.Factor) (interface{}, error) {
+func EvaluateMultiplication(ctx *Context, n *ast.Multiplication) (interface{}, error) {
 	return EvaluateUnary(ctx, n.Unary)
 }
 
-func EvaluateOpFactor(ctx *Context, n *ast.OpFactor, l interface{}) (interface{}, error) {
+func EvaluateOpMultiplication(ctx *Context, n *ast.OpMultiplication, l interface{}) (interface{}, error) {
 	return l, nil
 }
 

@@ -101,56 +101,94 @@ func WalkExpression(n *ast.Expression, d int) {
 	pad(d)
 	fmt.Println("Expression")
 	if n.Left != nil {
-		WalkCmp(n.Left, d+1)
+		WalkLogicalOr(n.Left, d+1)
 	}
 	for _, c := range n.Right {
-		WalkOpCmp(c, d+1)
+		WalkOpLogicalOr(c, d+1)
 	}
 }
 
-func WalkCmp(n *ast.Cmp, d int) {
+func WalkLogicalOr(n *ast.LogicalOr, d int) {
 	pad(d)
-	fmt.Println("Cmp")
+	fmt.Println("LogicalOr")
 	if n.Left != nil {
-		WalkTerm(n.Left, d+1)
+		WalkLogicalAnd(n.Left, d+1)
 	}
 	for _, t := range n.Right {
-		WalkOpTerm(t, d+1)
+		WalkOpLogicalAnd(t, d+1)
 	}
 }
 
-func WalkOpCmp(n *ast.OpCmp, d int) {
+func WalkOpLogicalOr(n *ast.OpLogicalOr, d int) {
 	pad(d)
-	fmt.Println("OpCmp")
+	fmt.Println("OpLogicalOr")
+	if n.LogicalOr != nil {
+		WalkLogicalOr(n.LogicalOr, d+1)
+	}
+}
+
+func WalkLogicalAnd(n *ast.LogicalAnd, d int) {
+	pad(d)
+	fmt.Println("LogicalAnd")
+	if n.Left != nil {
+		WalkRelative(n.Left, d+1)
+	}
+	for _, t := range n.Right {
+		WalkOpRelative(t, d+1)
+	}
+}
+
+func WalkOpLogicalAnd(n *ast.OpLogicalAnd, d int) {
+	pad(d)
+	fmt.Println("OpLogicalAnd")
+	if n.LogicalAnd != nil {
+		WalkLogicalAnd(n.LogicalAnd, d+1)
+	}
+}
+
+func WalkRelative(n *ast.Relative, d int) {
+	pad(d)
+	fmt.Println("Relative")
+	if n.Left != nil {
+		WalkAddition(n.Left, d+1)
+	}
+	for _, t := range n.Right {
+		WalkOpAddition(t, d+1)
+	}
+}
+
+func WalkOpRelative(n *ast.OpRelative, d int) {
+	pad(d)
+	fmt.Println("OpRelative")
 	WalkOperator(n.Operator, d+1)
 	if n.Cmp != nil {
-		WalkCmp(n.Cmp, d+1)
+		WalkRelative(n.Cmp, d+1)
 	}
 }
 
-func WalkTerm(n *ast.Term, d int) {
+func WalkAddition(n *ast.Addition, d int) {
 	pad(d)
-	fmt.Println("Term")
+	fmt.Println("Addition")
 	if n.Left != nil {
-		WalkFactor(n.Left, d+1)
+		WalkMultiplication(n.Left, d+1)
 	}
 	if n.Right != nil {
-		WalkFactor(n.Left, d+1)
+		WalkMultiplication(n.Left, d+1)
 	}
 }
 
-func WalkOpTerm(n *ast.OpTerm, d int) {
+func WalkOpAddition(n *ast.OpAddition, d int) {
 	pad(d)
-	fmt.Println("OpTerm")
+	fmt.Println("OpAddition")
 	WalkOperator(n.Operator, d+1)
 	if n.Term != nil {
-		WalkTerm(n.Term, d+1)
+		WalkAddition(n.Term, d+1)
 	}
 }
 
-func WalkFactor(n *ast.Factor, d int) {
+func WalkMultiplication(n *ast.Multiplication, d int) {
 	pad(d)
-	fmt.Println("Factor")
+	fmt.Println("Multiplication")
 	if n.Unary != nil {
 		WalkUnary(n.Unary, d+1)
 	}
@@ -159,12 +197,12 @@ func WalkFactor(n *ast.Factor, d int) {
 	}
 }
 
-func WalkOpFactor(n *ast.OpFactor, d int) {
+func WalkOpMultiplication(n *ast.OpMultiplication, d int) {
 	pad(d)
-	fmt.Println("OpFactor")
+	fmt.Println("OpMultiplication")
 	WalkOperator(n.Operator, d+1)
 	if n.Factor != nil {
-		WalkFactor(n.Factor, d+1)
+		WalkMultiplication(n.Factor, d+1)
 	}
 }
 

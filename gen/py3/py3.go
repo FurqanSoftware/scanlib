@@ -161,12 +161,12 @@ func GenerateForStmt(ctx *Context, n *ast.ForStmt) error {
 }
 
 func GenerateExpression(ctx *Context, n *ast.Expression) error {
-	err := GenerateCmp(ctx, n.Left)
+	err := GenerateLogicalOr(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpCmp(ctx, c)
+		err := GenerateOpLogicalOr(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -174,13 +174,13 @@ func GenerateExpression(ctx *Context, n *ast.Expression) error {
 	return nil
 }
 
-func GenerateCmp(ctx *Context, n *ast.Cmp) error {
-	err := GenerateTerm(ctx, n.Left)
+func GenerateLogicalOr(ctx *Context, n *ast.LogicalOr) error {
+	err := GenerateLogicalAnd(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpTerm(ctx, c)
+		err := GenerateOpLogicalAnd(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -188,18 +188,56 @@ func GenerateCmp(ctx *Context, n *ast.Cmp) error {
 	return nil
 }
 
-func GenerateOpCmp(ctx *Context, n *ast.OpCmp) error {
+func GenerateOpLogicalOr(ctx *Context, n *ast.OpLogicalOr) error {
+	ctx.cw.Print("||")
+	return GenerateLogicalOr(ctx, n.LogicalOr)
+}
+
+func GenerateLogicalAnd(ctx *Context, n *ast.LogicalAnd) error {
+	err := GenerateRelative(ctx, n.Left)
+	if err != nil {
+		return err
+	}
+	for _, c := range n.Right {
+		err := GenerateOpRelative(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GenerateOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd) error {
+	ctx.cw.Print("&&")
+	return GenerateLogicalAnd(ctx, n.LogicalAnd)
+}
+
+func GenerateRelative(ctx *Context, n *ast.Relative) error {
+	err := GenerateAddition(ctx, n.Left)
+	if err != nil {
+		return err
+	}
+	for _, c := range n.Right {
+		err := GenerateOpAddition(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GenerateOpRelative(ctx *Context, n *ast.OpRelative) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateCmp(ctx, n.Cmp)
+	return GenerateRelative(ctx, n.Cmp)
 }
 
-func GenerateTerm(ctx *Context, n *ast.Term) error {
-	err := GenerateFactor(ctx, n.Left)
+func GenerateAddition(ctx *Context, n *ast.Addition) error {
+	err := GenerateMultiplication(ctx, n.Left)
 	if err != nil {
 		return err
 	}
 	for _, c := range n.Right {
-		err := GenerateOpFactor(ctx, c)
+		err := GenerateOpMultiplication(ctx, c)
 		if err != nil {
 			return err
 		}
@@ -207,18 +245,18 @@ func GenerateTerm(ctx *Context, n *ast.Term) error {
 	return nil
 }
 
-func GenerateOpTerm(ctx *Context, n *ast.OpTerm) error {
+func GenerateOpAddition(ctx *Context, n *ast.OpAddition) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateTerm(ctx, n.Term)
+	return GenerateAddition(ctx, n.Term)
 }
 
-func GenerateFactor(ctx *Context, n *ast.Factor) error {
+func GenerateMultiplication(ctx *Context, n *ast.Multiplication) error {
 	return GenerateUnary(ctx, n.Unary)
 }
 
-func GenerateOpFactor(ctx *Context, n *ast.OpFactor) error {
+func GenerateOpMultiplication(ctx *Context, n *ast.OpMultiplication) error {
 	ctx.cw.Print(string(n.Operator))
-	return GenerateFactor(ctx, n.Factor)
+	return GenerateMultiplication(ctx, n.Factor)
 }
 
 func GenerateUnary(ctx *Context, n *ast.Unary) error {

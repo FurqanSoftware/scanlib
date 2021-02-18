@@ -1,0 +1,5 @@
+var n int
+scan n
+check n == 0 || n == 10
+eol
+eof

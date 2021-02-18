@@ -6,6 +6,14 @@ import (
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
+func toBool(v interface{}) (bool, bool) {
+	switch v := v.(type) {
+	case bool:
+		return v, true
+	}
+	return false, false
+}
+
 func toInt(v interface{}) (int, bool) {
 	switch v := v.(type) {
 	case int:
