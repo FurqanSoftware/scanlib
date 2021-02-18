@@ -11,7 +11,7 @@ type Source struct {
 }
 
 type Block struct {
-	Statement []*Statement `( @@ ( EOL @@ )* ) EOL?`
+	Statement []*Statement `EOL* ( @@ ( EOL+ @@ )* ) EOL*`
 }
 
 type Statement struct {
@@ -23,9 +23,6 @@ type Statement struct {
 	ForStmt   *ForStmt   `| @@`
 	EOLStmt   *string    `| @"eol"`
 	EOFStmt   *string    `| @"eof"`
-	// Comment *string  `( @Comment`
-	// Call    *Call    `| @@`
-	// For     *For     `| @@ ) EOL`
 }
 
 type VarDecl struct {

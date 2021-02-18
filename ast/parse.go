@@ -22,6 +22,7 @@ var (
 
 	inputParser = participle.MustBuild(&Source{},
 		participle.Lexer(inputLexer),
+		participle.Elide("Comment"),
 		participle.Unquote("String"),
 		participle.UseLookahead(2),
 	)

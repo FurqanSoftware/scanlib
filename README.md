@@ -100,6 +100,14 @@ for i in range(0, R):
 
 ### Specification
 
+#### Comments
+
+A comment begins with the # character, and ends at the end of the line. A comment cannot begin within a string literal.
+
+```
+# This is a comment
+```
+
 #### Keywords
 
 ```
