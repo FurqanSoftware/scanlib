@@ -11,8 +11,6 @@ type Context struct {
 	cw    *code.Writer
 
 	linevar bool
-
-	ozs map[interface{}]Optimization
 }
 
 type Optimization interface {

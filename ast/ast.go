@@ -222,3 +222,4 @@ func (Multiplication) node()   {}
 func (OpMultiplication) node() {}
 func (Unary) node()            {}
 func (Primary) node()          {}
+func (RangeClause) node()      {}

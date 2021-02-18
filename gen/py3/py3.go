@@ -12,20 +12,19 @@ import (
 )
 
 type Generator struct {
-	ctx *Context
+	ctx      *Context
+	analyzer *analyzer
 }
 
 func Generate(n *ast.Source) ([]byte, error) {
 	ctx := Context{
 		types: map[string]string{},
 		cw:    code.NewWriter("\t"),
-		ozs:   map[interface{}]Optimization{},
 	}
 
-	analyzeSource(&ctx, n)
-
 	g := Generator{
-		ctx: &ctx,
+		ctx:      &ctx,
+		analyzer: analyze(n),
 	}
 
 	ast.Walk(&g, n)
@@ -45,14 +44,11 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 	}
 
 	switch n := n.(type) {
-	case *ast.Source:
+	case *ast.Source, *ast.Block, *ast.Statement:
 		return g
 
-	case *ast.Block:
-		return g
-
-	case *ast.Statement:
-		return g
+	case *ast.CheckStmt, *ast.EOFStmt:
+		return nil
 
 	case *ast.VarDecl:
 		g.varDecl(n)
@@ -62,9 +58,6 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 		g.scanStmt(n)
 		return nil
 
-	case *ast.CheckStmt:
-		return g
-
 	case *ast.ForStmt:
 		g.forStmt(n)
 		return nil
@@ -72,9 +65,6 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 	case *ast.EOLStmt:
 		g.eolStmt(n)
 		return nil
-
-	case *ast.EOFStmt:
-		return g
 	}
 
 	panic(fmt.Errorf("unreachable, with %T", n))
@@ -95,7 +85,7 @@ func (g *Generator) varDecl(n *ast.VarDecl) error {
 			g.ctx.types[x] = "array"
 			g.ctx.types[x+"[]"] = t
 
-			oz, ok := g.ctx.ozs[n]
+			oz, ok := g.analyzer.ozs[n]
 			if ok {
 				return oz.Generate(g.ctx)
 			} else {
@@ -112,7 +102,7 @@ func (g *Generator) varDecl(n *ast.VarDecl) error {
 }
 
 func (g *Generator) scanStmt(n *ast.ScanStmt) error {
-	oz, ok := g.ctx.ozs[n]
+	oz, ok := g.analyzer.ozs[n]
 	if ok {
 		return oz.Generate(g.ctx)
 	}
@@ -136,7 +126,7 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 }
 
 func (g *Generator) forStmt(n *ast.ForStmt) error {
-	oz, ok := g.ctx.ozs[n]
+	oz, ok := g.analyzer.ozs[n]
 	if ok {
 		return oz.Generate(g.ctx)
 	}
@@ -160,7 +150,7 @@ func (g *Generator) forStmt(n *ast.ForStmt) error {
 }
 
 func (g *Generator) eolStmt(n *ast.EOLStmt) error {
-	oz, ok := g.ctx.ozs[n]
+	oz, ok := g.analyzer.ozs[n]
 	if ok {
 		return oz.Generate(g.ctx)
 	}

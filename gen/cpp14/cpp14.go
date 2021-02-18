@@ -58,14 +58,11 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 	}
 
 	switch n := n.(type) {
-	case *ast.Source:
+	case *ast.Source, *ast.Block, *ast.Statement:
 		return g
 
-	case *ast.Block:
-		return g
-
-	case *ast.Statement:
-		return g
+	case *ast.CheckStmt, *ast.EOLStmt, *ast.EOFStmt:
+		return nil
 
 	case *ast.VarDecl:
 		g.varDecl(n)
@@ -75,18 +72,9 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 		g.scanStmt(n)
 		return nil
 
-	case *ast.CheckStmt:
-		return g
-
 	case *ast.ForStmt:
 		g.forStmt(n)
 		return nil
-
-	case *ast.EOLStmt:
-		return g
-
-	case *ast.EOFStmt:
-		return g
 	}
 
 	panic(fmt.Errorf("unreachable, with %T", n))

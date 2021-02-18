@@ -6,14 +6,14 @@ import (
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
-type scanArray struct {
+type arrayLine struct {
 	varDecl  *ast.VarDecl
 	forStmt  *ast.ForStmt
 	scanStmt *ast.ScanStmt
 	eolStmt  *ast.EOLStmt
 }
 
-func (o scanArray) Generate(ctx *Context) error {
+func (o arrayLine) Generate(ctx *Context) error {
 	for i, x := range o.scanStmt.RefList {
 		if i > 0 {
 			ctx.cw.Print(", ")
@@ -26,101 +26,108 @@ func (o scanArray) Generate(ctx *Context) error {
 	return nil
 }
 
-func analyzeBlockScanArray(ctx *Context, n *ast.Block) {
+func (a *analyzer) arrayLine(n *ast.Block) {
 	const (
-		szero int = iota
-		svar
-		sfor
-		seol
+		zero State = iota
+		decl
+		loop
+		scan
 	)
 
-	oz := scanArray{}
+	oz := arrayLine{}
 
-	var state = szero
-	for _, n := range n.Statements {
-		switch {
-		case n.VarDecl != nil:
-			if state == szero {
-				if len(n.VarDecl.VarSpec.IdentList) == 1 &&
-					n.VarDecl.VarSpec.Type.TypeLit != nil &&
-					n.VarDecl.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName != nil {
-					state = svar
-					oz.varDecl = n.VarDecl
-				}
-			} else {
-				state = szero
-			}
-
-		case n.CheckStmt != nil:
-
-		case n.ForStmt != nil:
-			if state == svar &&
-				exprEqInt64(&n.ForStmt.Range.Low, 0) &&
-				exprEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.ForStmt.Range.High) {
-				scanstmt, ok := analyzeBlockScanArraySfor(ctx, n.ForStmt, &oz)
-				if ok {
-					state = sfor
-					oz.forStmt = n.ForStmt
-					oz.scanStmt = scanstmt
-				} else {
-					state = szero
-				}
-
-			} else {
-				state = szero
-
-				analyzeBlock(ctx, &n.ForStmt.Block)
-			}
-
-		case n.EOLStmt != nil:
-			if state == sfor {
-				state = seol
-				oz.eolStmt = n.EOLStmt
-				ctx.ozs[oz.forStmt] = oz
-				ctx.ozs[oz.varDecl] = Noop{}
-				ctx.ozs[oz.eolStmt] = Noop{}
-
-			} else {
-				state = szero
-			}
-
-		default:
-			state = szero
+	var state State
+	ast.Inspect(n, func(n ast.Node) bool {
+		if n == nil {
+			return false
 		}
-	}
-}
 
-func analyzeBlockScanArraySfor(ctx *Context, nfor *ast.ForStmt, oz *scanArray) (*ast.ScanStmt, bool) {
-	const (
-		szero int = iota
-		sscan
-	)
+		switch state {
+		case zero:
+			switch n := n.(type) {
+			case *ast.Block, *ast.Statement:
+				return true
 
-	var scanstmt *ast.ScanStmt
-
-	var state = szero
-	for _, n := range nfor.Block.Statements {
-		switch {
-		case n.ScanStmt != nil:
-			if state == szero {
-				if len(n.ScanStmt.RefList) == 1 &&
-					n.ScanStmt.RefList[0].Ident == oz.varDecl.VarSpec.IdentList[0] &&
-					len(n.ScanStmt.RefList[0].Indices) == 1 &&
-					exprEqVar(&n.ScanStmt.RefList[0].Indices[0], nfor.Range.Index) {
-					state = sscan
-					scanstmt = n.ScanStmt
+			case *ast.VarDecl:
+				if len(n.VarSpec.IdentList) == 1 &&
+					n.VarSpec.Type.TypeLit != nil &&
+					n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName != nil {
+					oz.varDecl = n
+					state++
 				}
-			} else {
-				return nil, false
+				return false
+
+			default:
+				return false
 			}
 
-		case n.CheckStmt != nil:
+		case decl:
+			switch n := n.(type) {
+			case *ast.Statement:
+				return true
 
-		default:
-			return nil, false
+			case *ast.CheckStmt:
+				return false
+
+			case *ast.ForStmt:
+				if exprEqInt64(&n.Range.Low, 0) &&
+					exprEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.Range.High) {
+					oz.forStmt = n
+					state++
+					return true
+				}
+
+			default:
+				state = zero
+				return false
+			}
+
+		case loop:
+			switch n := n.(type) {
+			case *ast.Block, *ast.Statement:
+				return true
+
+			case *ast.CheckStmt, *ast.RangeClause:
+				return false
+
+			case *ast.ScanStmt:
+				if len(n.RefList) == 1 &&
+					n.RefList[0].Ident == oz.varDecl.VarSpec.IdentList[0] &&
+					len(n.RefList[0].Indices) == 1 &&
+					exprEqVar(&n.RefList[0].Indices[0], oz.forStmt.Range.Index) {
+					oz.scanStmt = n
+					state++
+				}
+				return false
+
+			default:
+				state = zero
+				return false
+			}
+
+		case scan:
+			switch n := n.(type) {
+			case *ast.Statement:
+				return true
+
+			case *ast.CheckStmt:
+				return false
+
+			case *ast.EOLStmt:
+				oz.eolStmt = n
+				a.ozs[oz.forStmt] = oz
+				a.ozs[oz.varDecl] = Noop{}
+				a.ozs[oz.eolStmt] = Noop{}
+				state = zero
+				return false
+
+			default:
+				state = zero
+			}
 		}
-	}
-	return scanstmt, true
+
+		return false
+	})
 }
 
 func exprEq(a, b *ast.Expr) bool {

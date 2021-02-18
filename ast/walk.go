@@ -1,5 +1,7 @@
 package ast
 
+import "fmt"
+
 type Visitor interface {
     Visit(Node) Visitor
 }
@@ -37,6 +39,24 @@ func Walk(v Visitor, n Node) {
 
     case *VarDecl:
         Walk(v, &n.VarSpec)
+
+    case *ScanStmt:
+        for _, n := range n.RefList {
+            Walk(v, &n)
+        }
+
+    case *CheckStmt:
+        for _, n := range n.ExprList {
+            Walk(v, &n)
+        }
+
+    case *ForStmt:
+        Walk(v, &n.Range)
+        Walk(v, &n.Block)
+
+    case *EOLStmt:
+
+    case *EOFStmt:
 
     case *VarSpec:
         Walk(v, &n.Type)
@@ -109,7 +129,22 @@ func Walk(v Visitor, n Node) {
 
     case *Primary:
 
+    default:
+        panic(fmt.Errorf("unreachable, with %T", n))
     }
 
     v.Visit(nil)
+}
+
+type inspector func(Node) bool
+
+func (f inspector) Visit(node Node) Visitor {
+    if f(node) {
+        return f
+    }
+    return nil
+}
+
+func Inspect(node Node, f func(Node) bool) {
+    Walk(inspector(f), node)
 }

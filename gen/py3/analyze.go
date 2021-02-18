@@ -6,12 +6,35 @@ import (
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
-func analyzeSource(ctx *Context, n *ast.Source) {
-	analyzeBlock(ctx, &n.Block)
+type analyzer struct {
+	ozs map[ast.Node]Optimization
 }
 
-func analyzeBlock(ctx *Context, n *ast.Block) {
-	analyzeBlockScanSame(ctx, n)
-	analyzeBlockScanOne(ctx, n)
-	analyzeBlockScanArray(ctx, n)
+func analyze(n *ast.Source) *analyzer {
+	a := analyzer{
+		ozs: map[ast.Node]Optimization{},
+	}
+	ast.Walk(&a, n)
+	return &a
 }
+
+func (a *analyzer) Visit(n ast.Node) ast.Visitor {
+	if n == nil {
+		return nil
+	}
+
+	switch n := n.(type) {
+	case *ast.Source, *ast.Statement, *ast.ForStmt:
+		return a
+
+	case *ast.Block:
+		a.multiVar(n)
+		a.onlyToken(n)
+		a.arrayLine(n)
+		return a
+	}
+
+	return nil
+}
+
+type State int
