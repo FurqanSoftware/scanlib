@@ -30,22 +30,31 @@ func (a *analyzer) arrayLine(n *ast.Block) {
 	const (
 		zero State = iota
 		decl
-		loop
+		loopin
 		scan
+		loopout
 	)
 
 	oz := arrayLine{}
 
-	var state State
+	var (
+		state State
+		depth int
+	)
 	ast.Inspect(n, func(n ast.Node) bool {
 		if n == nil {
-			return false
+			depth--
 		}
 
 		switch state {
 		case zero:
+			if n == nil {
+				return false
+			}
+
 			switch n := n.(type) {
 			case *ast.Block, *ast.Statement:
+				depth++
 				return true
 
 			case *ast.VarDecl:
@@ -62,8 +71,13 @@ func (a *analyzer) arrayLine(n *ast.Block) {
 			}
 
 		case decl:
+			if n == nil {
+				return false
+			}
+
 			switch n := n.(type) {
 			case *ast.Statement:
+				depth++
 				return true
 
 			case *ast.CheckStmt:
@@ -74,6 +88,7 @@ func (a *analyzer) arrayLine(n *ast.Block) {
 					exprEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.Range.High) {
 					oz.forStmt = n
 					state++
+					depth++
 					return true
 				}
 
@@ -82,9 +97,14 @@ func (a *analyzer) arrayLine(n *ast.Block) {
 				return false
 			}
 
-		case loop:
+		case loopin:
+			if n == nil {
+				return false
+			}
+
 			switch n := n.(type) {
 			case *ast.Block, *ast.Statement:
+				depth++
 				return true
 
 			case *ast.CheckStmt, *ast.RangeClause:
@@ -106,8 +126,33 @@ func (a *analyzer) arrayLine(n *ast.Block) {
 			}
 
 		case scan:
+			if n == nil {
+				if depth == 1 {
+					state++
+				}
+				return false
+			}
+
+			switch n.(type) {
+			case *ast.Statement:
+				depth++
+				return true
+
+			case *ast.CheckStmt:
+				return false
+
+			default:
+				state = zero
+			}
+
+		case loopout:
+			if n == nil {
+				return false
+			}
+
 			switch n := n.(type) {
 			case *ast.Statement:
+				depth++
 				return true
 
 			case *ast.CheckStmt:
