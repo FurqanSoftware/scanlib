@@ -126,8 +126,9 @@ func (g *Generator) varDecl(n *ast.VarDecl) error {
 }
 
 func (g *Generator) scanStmt(n *ast.ScanStmt) error {
+	g.ctx.cw.Printf("cin")
 	for _, f := range n.RefList {
-		g.ctx.cw.Printf("cin >> %s", f.Ident)
+		g.ctx.cw.Printf(" >> %s", f.Ident)
 		for _, i := range f.Indices {
 			g.ctx.cw.Print("[")
 			err := genExpr(g.ctx, &i)
@@ -136,9 +137,9 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 			}
 			g.ctx.cw.Print("]")
 		}
-		g.ctx.cw.Print(";")
-		g.ctx.cw.Println()
 	}
+	g.ctx.cw.Print(";")
+	g.ctx.cw.Println()
 	return nil
 }
 

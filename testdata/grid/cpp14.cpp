@@ -5,8 +5,7 @@ using namespace std;
 
 int main() {
 	int R, C;
-	cin >> R;
-	cin >> C;
+	cin >> R >> C;
 	string G[R];
 	for (int i = 0; i < R; ++i) {
 		cin >> G[i];
