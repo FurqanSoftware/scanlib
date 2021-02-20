@@ -24,6 +24,10 @@ func NewWriter(indent string) *Writer {
 	}
 }
 
+func (w *Writer) Len() int {
+	return w.buf.Len()
+}
+
 func (w *Writer) Bytes() []byte {
 	return w.buf.Bytes()
 }

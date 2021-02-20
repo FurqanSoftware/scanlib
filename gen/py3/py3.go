@@ -58,6 +58,10 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 		g.scanStmt(n)
 		return nil
 
+	case *ast.IfStmt:
+		g.ifStmt(n)
+		return nil
+
 	case *ast.ForStmt:
 		g.forStmt(n)
 		return nil
@@ -121,6 +125,34 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 		}
 		g.ctx.cw.Printf(" = %s(_.pop(0))", g.ctx.types[f.Ident+strings.Repeat("[]", len(f.Indices))])
 		g.ctx.cw.Println()
+	}
+	return nil
+}
+
+func (g *Generator) ifStmt(n *ast.IfStmt) error {
+	for i, n := range n.Branches {
+		if n.Condition != nil {
+			if i == 0 {
+				g.ctx.cw.Print("if ")
+			} else {
+				g.ctx.cw.Print("elif ")
+			}
+			err := genExpr(g.ctx, n.Condition)
+			if err != nil {
+				return err
+			}
+			g.ctx.cw.Printf(":")
+		} else {
+			g.ctx.cw.Printf("else:")
+		}
+		g.ctx.cw.Println()
+		g.ctx.cw.Indent(1)
+		l := g.ctx.cw.Len()
+		ast.Walk(g, &n.Block)
+		if g.ctx.cw.Len() == l {
+			g.ctx.cw.Println("pass")
+		}
+		g.ctx.cw.Indent(-1)
 	}
 	return nil
 }

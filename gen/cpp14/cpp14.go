@@ -72,6 +72,10 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 		g.scanStmt(n)
 		return nil
 
+	case *ast.IfStmt:
+		g.ifStmt(n)
+		return nil
+
 	case *ast.ForStmt:
 		g.forStmt(n)
 		return nil
@@ -139,6 +143,31 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 		}
 	}
 	g.ctx.cw.Print(";")
+	g.ctx.cw.Println()
+	return nil
+}
+
+func (g *Generator) ifStmt(n *ast.IfStmt) error {
+	for i, n := range n.Branches {
+		if i > 0 {
+			g.ctx.cw.Print(" else ")
+		}
+		if n.Condition != nil {
+			g.ctx.cw.Print("if (")
+			err := genExpr(g.ctx, n.Condition)
+			if err != nil {
+				return err
+			}
+			g.ctx.cw.Printf(") {")
+		} else {
+			g.ctx.cw.Printf("{")
+		}
+		g.ctx.cw.Println()
+		g.ctx.cw.Indent(1)
+		ast.Walk(g, &n.Block)
+		g.ctx.cw.Indent(-1)
+		g.ctx.cw.Printf("}")
+	}
 	g.ctx.cw.Println()
 	return nil
 }
