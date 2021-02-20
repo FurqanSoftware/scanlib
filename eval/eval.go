@@ -73,7 +73,8 @@ func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
 		return nil
 
 	case *ast.EOLStmt:
-		e.eolStmt(n)
+		err := e.eolStmt(n)
+		catch(err)
 		return nil
 
 	case *ast.EOFStmt:
