@@ -49,6 +49,10 @@ func TestEvaluate(t *testing.T) {
 						if err.Error() != string(errstr) {
 							t.Fatalf("want err == %q, got %q", string(errstr), err.Error())
 						}
+					} else {
+						if string(errstr) != "" {
+							t.Fatalf("want err == %q, got nil", string(errstr))
+						}
 					}
 				})
 			}

@@ -12,12 +12,24 @@ type Evaluator struct {
 	ctx *Context
 }
 
-func Evaluate(ctx *Context, n *ast.Source) (*Evaluator, error) {
-	e := Evaluator{
+func Evaluate(ctx *Context, n *ast.Source) (e *Evaluator, err error) {
+	e = &Evaluator{
 		ctx: ctx,
 	}
-	ast.Walk(&e, n)
-	return &e, nil
+	defer func() {
+		v := recover()
+		if v == nil {
+			return
+		}
+		switch v := v.(type) {
+		case error:
+			err = v
+		default:
+			panic(err)
+		}
+	}()
+	ast.Walk(e, n)
+	return e, nil
 
 }
 
@@ -37,19 +49,23 @@ func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
 		return e
 
 	case *ast.VarDecl:
-		e.varDecl(n)
+		err := e.varDecl(n)
+		catch(err)
 		return nil
 
 	case *ast.ScanStmt:
-		e.scanStmt(n)
+		err := e.scanStmt(n)
+		catch(err)
 		return nil
 
 	case *ast.CheckStmt:
-		e.checkStmt(n)
+		err := e.checkStmt(n)
+		catch(err)
 		return nil
 
 	case *ast.ForStmt:
-		e.forStmt(n)
+		err := e.forStmt(n)
+		catch(err)
 		return nil
 
 	case *ast.EOLStmt:
@@ -57,7 +73,8 @@ func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
 		return nil
 
 	case *ast.EOFStmt:
-		e.eofStmt(n)
+		err := e.eofStmt(n)
+		catch(err)
 		return nil
 	}
 

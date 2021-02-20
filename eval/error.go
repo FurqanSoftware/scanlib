@@ -94,3 +94,9 @@ func (e ErrBadParse) Error() string {
 type Cursor struct {
 	Ln, Col int
 }
+
+func catch(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
