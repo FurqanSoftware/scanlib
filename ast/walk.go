@@ -29,6 +29,8 @@ func Walk(v Visitor, n Node) {
             Walk(v, n.ScanStmt)
         case n.CheckStmt != nil:
             Walk(v, n.CheckStmt)
+        case n.IfStmt != nil:
+            Walk(v, n.IfStmt)
         case n.ForStmt != nil:
             Walk(v, n.ForStmt)
         case n.EOLStmt != nil:
@@ -49,6 +51,15 @@ func Walk(v Visitor, n Node) {
         for _, n := range n.ExprList {
             Walk(v, &n)
         }
+
+    case *IfStmt:
+        for _, n := range n.Branches {
+            Walk(v, &n)
+        }
+
+    case *IfBranch:
+        Walk(v, n.Condition)
+        Walk(v, &n.Block)
 
     case *ForStmt:
         Walk(v, &n.Range)

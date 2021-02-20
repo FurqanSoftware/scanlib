@@ -151,6 +151,20 @@ scan e, f, n
 scan G[2]
 ```
 
+#### If Statements
+
+```
+if q == 1
+	scan i, G[i]
+else if q == 2
+	scan a
+else if q == 3
+	scan l, h
+else
+	scan G[q]
+end
+```
+
 #### For Statements
 
 ```
@@ -183,7 +197,7 @@ re(s, x): Returns true if string s matches regular expression x.
 
 ## TODO
 
-- [ ] If Statements
+- [x] If Statements
 - [ ] C Generator
 - [ ] Go Generator
 - [ ] Graph Checks

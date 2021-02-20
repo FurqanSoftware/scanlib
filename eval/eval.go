@@ -30,7 +30,6 @@ func Evaluate(ctx *Context, n *ast.Source) (e *Evaluator, err error) {
 	}()
 	ast.Walk(e, n)
 	return e, nil
-
 }
 
 func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
@@ -60,6 +59,11 @@ func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
 
 	case *ast.CheckStmt:
 		err := e.checkStmt(n)
+		catch(err)
+		return nil
+
+	case *ast.IfStmt:
+		err := e.ifStmt(n)
 		catch(err)
 		return nil
 
@@ -154,6 +158,30 @@ func (e *Evaluator) checkStmt(n *ast.CheckStmt) error {
 		vb, _ := v.(bool)
 		if !vb {
 			return ErrCheckError{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Clause: i + 1}
+		}
+	}
+	return nil
+}
+
+func (e *Evaluator) ifStmt(n *ast.IfStmt) error {
+	for _, n := range n.Branches {
+		cond := false
+		if n.Condition == nil {
+			cond = true
+		} else {
+			v, err := evalExpr(e.ctx, n.Condition)
+			if err != nil {
+				return err
+			}
+			vb, ok := toBool(v)
+			if !ok {
+				return errors.New("non-bool used as if condition")
+			}
+			cond = vb
+		}
+		if cond {
+			ast.Walk(e, &n.Block)
+			break
 		}
 	}
 	return nil

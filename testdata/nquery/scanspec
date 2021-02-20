@@ -1,0 +1,22 @@
+var N int
+scan N
+check N > 0, N < 100
+eol
+for i := 0 ... N
+	var q, l, h int
+	var w string
+	scan q
+	check q == 1 || q == 2
+	if q == 1
+		scan w
+		check len(w) < 50, re(w, "^[a-z]+$")
+	else if q == 2
+		scan l, h
+		check l > 0, l < 50, h > 0, h < 50
+	else
+		# Unreachable
+		check false
+	end
+	eol
+end
+eof

@@ -24,10 +24,10 @@ type Statement struct {
     VarDecl   *VarDecl   `  @@`
     ScanStmt  *ScanStmt  `| @@`
     CheckStmt *CheckStmt `| @@`
+    IfStmt    *IfStmt    `| @@`
     ForStmt   *ForStmt   `| @@`
-    // IfStmt    *IfStmt    `| @@`
-    EOLStmt *EOLStmt `| @@`
-    EOFStmt *EOFStmt `| @@`
+    EOLStmt   *EOLStmt   `| @@`
+    EOFStmt   *EOFStmt   `| @@`
 }
 
 type VarDecl struct {
@@ -44,6 +44,15 @@ type CheckStmt struct {
     Pos lexer.Position
 
     ExprList []Expr `"check" @@ ( "," @@ )*`
+}
+
+type IfStmt struct {
+    Branches []IfBranch `( @@ ( EOL* "else" @@ )* ) EOL* "end"`
+}
+
+type IfBranch struct {
+    Condition *Expr `( "if" @@ )? EOL+`
+    Block     Block `@@`
 }
 
 type ForStmt struct {
@@ -201,6 +210,8 @@ func (Statement) node()        {}
 func (VarDecl) node()          {}
 func (ScanStmt) node()         {}
 func (CheckStmt) node()        {}
+func (IfStmt) node()           {}
+func (IfBranch) node()         {}
 func (ForStmt) node()          {}
 func (EOLStmt) node()          {}
 func (EOFStmt) node()          {}
