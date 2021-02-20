@@ -33,11 +33,11 @@ func toFloat32(v interface{}) (float32, bool) {
 	case int:
 		return float32(v), true
 	case int64:
-		return float32(v), false
+		return float32(v), true
 	case float32:
-		return v, false
+		return v, true
 	case float64:
-		return float32(v), false
+		return float32(v), true
 	}
 	return 0, false
 }
@@ -47,11 +47,11 @@ func toFloat64(v interface{}) (float64, bool) {
 	case int:
 		return float64(v), true
 	case int64:
-		return float64(v), false
+		return float64(v), true
 	case float32:
-		return float64(v), false
+		return float64(v), true
 	case float64:
-		return v, false
+		return v, true
 	}
 	return 0, false
 }
