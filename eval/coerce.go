@@ -13,7 +13,7 @@ func toInt(v interface{}) (int, bool) {
 	case int:
 		return v, true
 	case int64:
-		return int(v), false
+		return int(v), true
 	}
 	return 0, false
 }
