@@ -1,0 +1,25 @@
+var N, Q int
+scan N, Q
+check N >= 1, N <= 20, Q >= 1, Q <= 10000
+eol
+var A [N]int
+for i := 0 ... N
+	scan A[i]
+	check A[i] >= 1, A[i] <= 1000000000
+end
+eol
+for i := 0 ... Q
+	var q, P, C, L, R, K int
+	scan q
+	check q == 1 || q == 2
+	if q == 1
+		scan P, C
+		check P >= 1, P <= N, C >= 1, C <= 1000000000
+		eol
+	else if q == 2
+		scan L, R, K
+		check L >= 1, L < pow(2, N), R >= L, R < pow(2, N), K >= 1, K <= R-L+1
+		eol
+	end
+end
+eof

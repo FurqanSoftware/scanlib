@@ -193,6 +193,7 @@ eof
 ```
 len(a): Returns the length of array a.
 re(s, x): Returns true if string s matches regular expression x.
+pow(n, e): Returns n raised to the power of e. Result is int or int64 if both n and e are int or int64, otherwise float64.
 ```
 
 ## TODO

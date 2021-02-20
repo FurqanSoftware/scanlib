@@ -1,6 +1,9 @@
 package eval
 
-import "regexp"
+import (
+	"math"
+	"regexp"
+)
 
 var Functions = map[string]func(args ...interface{}) (interface{}, error){
 	"len": func(args ...interface{}) (interface{}, error) {
@@ -26,4 +29,66 @@ var Functions = map[string]func(args ...interface{}) (interface{}, error){
 		}
 		return re.MatchString(s), nil
 	},
+
+	"pow": func(args ...interface{}) (interface{}, error) {
+		switch n := args[0].(type) {
+		case int:
+			exp, ok := toInt(args[1])
+			if !ok {
+				return nil, ErrInvalidArgument{}
+			}
+			if exp >= 0 {
+				return powInt(n, exp), nil
+			}
+
+		case int64:
+			exp, ok := toInt64(args[1])
+			if !ok {
+				return nil, ErrInvalidArgument{}
+			}
+			if exp >= 0 {
+				return powInt64(n, exp), nil
+			}
+		}
+
+		n, ok := toFloat64(args[0])
+		if !ok {
+			return nil, ErrInvalidArgument{}
+		}
+		exp, ok := toFloat64(args[1])
+		if !ok {
+			return nil, ErrInvalidArgument{}
+		}
+		return math.Pow(n, exp), nil
+	},
+}
+
+func powInt(n int, exp int) int {
+	r := 1
+	for {
+		if exp&1 > 0 {
+			r *= n
+		}
+		exp >>= 1
+		if exp == 0 {
+			break
+		}
+		n *= n
+	}
+	return r
+}
+
+func powInt64(n int64, exp int64) int64 {
+	var r int64 = 1
+	for {
+		if exp&1 > 0 {
+			r *= n
+		}
+		exp >>= 1
+		if exp == 0 {
+			break
+		}
+		n *= n
+	}
+	return r
 }
