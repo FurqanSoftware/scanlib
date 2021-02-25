@@ -3,8 +3,6 @@
 package py3
 
 import (
-	"fmt"
-
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
@@ -20,7 +18,6 @@ func analyze(n *ast.Source) *analyzer {
 		blockEOLs: map[*ast.Block]bool{},
 	}
 	findBlockEOLs(&a, n)
-	fmt.Println(a.blockEOLs)
 	ast.Walk(&a, n)
 	return &a
 }
