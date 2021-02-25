@@ -117,7 +117,7 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 			}
 			vi, ok := v.(int)
 			if !ok {
-				return ErrNonIntegerIndex{Pos: Cursor{i.Pos.Line, i.Pos.Column}}
+				return ErrNonIntegerIndex{Pos: i.Pos}
 			}
 			indices = append(indices, vi)
 		}
@@ -141,7 +141,7 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 		}
 		if err != nil {
 			if err == io.EOF {
-				return ErrUnexpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+				return ErrUnexpectedEOF{Pos: n.Pos}
 			}
 			return err
 		}
@@ -158,7 +158,7 @@ func (e *Evaluator) checkStmt(n *ast.CheckStmt) error {
 		}
 		vb, _ := v.(bool)
 		if !vb {
-			return ErrCheckError{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Clause: i + 1}
+			return ErrCheckError{Pos: n.Pos, Clause: i + 1, Cursor: e.ctx.Input.Cursor}
 		}
 	}
 	return nil
@@ -218,7 +218,7 @@ func (e *Evaluator) eolStmt(n *ast.EOLStmt) error {
 		return err
 	}
 	if !eol {
-		return ErrExpectedEOL{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+		return ErrExpectedEOL{Pos: n.Pos}
 	}
 	return nil
 }
@@ -229,7 +229,7 @@ func (e *Evaluator) eofStmt(n *ast.EOFStmt) error {
 		return err
 	}
 	if !eof {
-		return ErrExpectedEOF{Pos: Cursor{n.Pos.Line, n.Pos.Column}, Token: e.ctx.Input.Scanner.Bytes()}
+		return ErrExpectedEOF{Pos: n.Pos, Token: e.ctx.Input.Scanner.Bytes()}
 	}
 	return nil
 }
@@ -273,7 +273,7 @@ func evalOpLogicalOr(ctx *Context, n *ast.OpLogicalOr, l interface{}) (interface
 	case bool:
 		ri, ok := toBool(r)
 		if !ok {
-			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+			return nil, ErrInvalidOperation{Pos: n.Pos}
 		}
 		return l || ri, nil
 	}
@@ -304,7 +304,7 @@ func evalOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd, l interface{}) (interfa
 	case bool:
 		ri, ok := toBool(r)
 		if !ok {
-			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+			return nil, ErrInvalidOperation{Pos: n.Pos}
 		}
 		return l && ri, nil
 	}
@@ -335,7 +335,7 @@ func evalOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}
 	case bool:
 		ri, ok := toBool(r)
 		if !ok {
-			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+			return nil, ErrInvalidOperation{Pos: n.Pos}
 		}
 		switch n.Operator {
 		case "==":
@@ -347,7 +347,7 @@ func evalOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}
 	case int:
 		ri, ok := toInt(r)
 		if !ok {
-			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+			return nil, ErrInvalidOperation{Pos: n.Pos}
 		}
 		switch n.Operator {
 		case "==":
@@ -451,7 +451,7 @@ func evalOpAddition(ctx *Context, n *ast.OpAddition, l interface{}) (interface{}
 	case int:
 		ri, ok := toInt(r)
 		if !ok {
-			return nil, ErrInvalidOperation{Pos: Cursor{n.Pos.Line, n.Pos.Column}}
+			return nil, ErrInvalidOperation{Pos: n.Pos}
 		}
 		switch n.Operator {
 		case "+":
@@ -555,7 +555,7 @@ func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 			}
 			vi, ok := v.(int)
 			if !ok {
-				return nil, ErrNonIntegerIndex{Pos: Cursor{i.Pos.Line, i.Pos.Column}}
+				return nil, ErrNonIntegerIndex{Pos: i.Pos}
 			}
 			indices = append(indices, vi)
 		}

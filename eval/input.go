@@ -18,6 +18,7 @@ func NewInput(input io.Reader) (*Input, error) {
 	sc.Split(ScanTokens)
 	p := &Input{
 		Scanner: sc,
+		Cursor:  Cursor{1, 0},
 	}
 	return p, nil
 }
@@ -29,7 +30,7 @@ func (p *Input) Bool() (bool, error) {
 	}
 	v, err := strconv.ParseBool(string(b))
 	if err != nil {
-		return false, ErrBadParse{Pos: p.Cursor, Want: "bool", Got: b}
+		return false, ErrBadParse{Want: "bool", Got: b, Cursor: p.Cursor}
 	}
 	return v, nil
 }
@@ -41,7 +42,7 @@ func (p *Input) Int() (int, error) {
 	}
 	n, err := strconv.ParseInt(string(b), 10, 32)
 	if err != nil {
-		return 0, ErrBadParse{Pos: p.Cursor, Want: "int", Got: b}
+		return 0, ErrBadParse{Want: "int", Got: b, Cursor: p.Cursor}
 	}
 	return int(n), nil
 }
@@ -53,7 +54,7 @@ func (p *Input) Int64() (int64, error) {
 	}
 	n, err := strconv.ParseInt(string(b), 10, 64)
 	if err != nil {
-		return 0, ErrBadParse{Pos: p.Cursor, Want: "int64", Got: b}
+		return 0, ErrBadParse{Want: "int64", Got: b, Cursor: p.Cursor}
 	}
 	return n, nil
 }
@@ -65,7 +66,7 @@ func (p *Input) Float32() (float32, error) {
 	}
 	f, err := strconv.ParseFloat(string(b), 32)
 	if err != nil {
-		return 0, ErrBadParse{Pos: p.Cursor, Want: "float32", Got: b}
+		return 0, ErrBadParse{Want: "float32", Got: b, Cursor: p.Cursor}
 	}
 	return float32(f), nil
 }
@@ -77,7 +78,7 @@ func (p *Input) Float64() (float64, error) {
 	}
 	f, err := strconv.ParseFloat(string(b), 64)
 	if err != nil {
-		return 0, ErrBadParse{Pos: p.Cursor, Want: "float64", Got: b}
+		return 0, ErrBadParse{Want: "float64", Got: b, Cursor: p.Cursor}
 	}
 	return float64(f), nil
 }
@@ -118,7 +119,6 @@ func (p *Input) next() ([]byte, error) {
 		}
 	}
 	b := p.Scanner.Bytes()
-	p.pushCursor(b)
 	return b, nil
 }
 
@@ -130,6 +130,7 @@ func (p *Input) scan() error {
 		}
 		return err
 	}
+	p.pushCursor(p.Scanner.Bytes())
 	return nil
 }
 
@@ -139,7 +140,6 @@ func (p *Input) skipSpace() (bool, error) {
 		return false, err
 	}
 	b := p.Scanner.Bytes()
-	p.pushCursor(b)
 	r, _ := utf8.DecodeRune(b)
 	return r == ' ', nil
 }
@@ -150,7 +150,7 @@ func (p *Input) pushCursor(b []byte) {
 		p.Cursor.Ln++
 		p.Cursor.Col = 0
 	} else {
-		p.Cursor.Col = len(b)
+		p.Cursor.Col += len(b)
 	}
 }
 

@@ -1,6 +1,10 @@
 package eval
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/alecthomas/participle/v2/lexer"
+)
 
 type ErrUndefined struct {
 	Name string
@@ -23,72 +27,73 @@ func (e ErrInvalidArgument) Error() string {
 }
 
 type ErrInvalidOperation struct {
-	Pos Cursor
+	Pos lexer.Position
 }
 
 func (e ErrInvalidOperation) Error() string {
-	return fmt.Sprintf("%d:%d: invalid operation", e.Pos.Ln, e.Pos.Col)
+	return fmt.Sprintf("%d:%d: invalid operation", e.Pos.Line, e.Pos.Column)
 }
 
 type ErrNonIntegerIndex struct {
-	Pos Cursor
+	Pos lexer.Position
 }
 
 func (e ErrNonIntegerIndex) Error() string {
-	return fmt.Sprintf("%d:%d: non-integer index", e.Pos.Ln, e.Pos.Col)
+	return fmt.Sprintf("%d:%d: non-integer index", e.Pos.Line, e.Pos.Column)
 }
 
 type ErrCheckError struct {
-	Pos    Cursor
+	Pos    lexer.Position
 	Clause int
+	Cursor Cursor
 }
 
 func (e ErrCheckError) Error() string {
-	return fmt.Sprintf("%d:%d: check error (clause %d)", e.Pos.Ln, e.Pos.Col, e.Clause)
+	return fmt.Sprintf("%d:%d: check error (clause %d, cursor %d:%d)", e.Pos.Line, e.Pos.Column, e.Clause, e.Cursor.Ln, e.Cursor.Col)
 }
 
 type ErrExpectedEOL struct {
-	Pos Cursor
+	Pos lexer.Position
 }
 
 func (e ErrExpectedEOL) Error() string {
-	return fmt.Sprintf("%d:%d: want EOL", e.Pos.Ln, e.Pos.Col)
+	return fmt.Sprintf("%d:%d: want EOL", e.Pos.Line, e.Pos.Column)
 
 }
 
 type ErrUnexpectedEOL struct {
-	Pos Cursor
+	Pos lexer.Position
 }
 
 func (e ErrUnexpectedEOL) Error() string {
-	return fmt.Sprintf("%d:%d: unwanted EOL", e.Pos.Ln, e.Pos.Col)
+	return fmt.Sprintf("%d:%d: unwanted EOL", e.Pos.Line, e.Pos.Column)
 }
 
 type ErrExpectedEOF struct {
-	Pos   Cursor
+	Pos   lexer.Position
 	Token []byte
 }
 
 func (e ErrExpectedEOF) Error() string {
-	return fmt.Sprintf("%d:%d: want EOF, got trailing %q", e.Pos.Ln, e.Pos.Col, e.Token)
+	return fmt.Sprintf("%d:%d: want EOF, got trailing %q", e.Pos.Line, e.Pos.Column, e.Token)
 }
 
 type ErrUnexpectedEOF struct {
-	Pos Cursor
+	Pos lexer.Position
 }
 
 func (e ErrUnexpectedEOF) Error() string {
-	return fmt.Sprintf("%d:%d: unwanted EOF", e.Pos.Ln, e.Pos.Col)
+	return fmt.Sprintf("%d:%d: unwanted EOF", e.Pos.Line, e.Pos.Column)
 }
 
 type ErrBadParse struct {
-	Pos  Cursor
-	Want string
-	Got  []byte
+	Want   string
+	Got    []byte
+	Cursor Cursor
 }
 
 func (e ErrBadParse) Error() string {
-	return fmt.Sprintf("Ln %d, Col %d: parse error: want %s, got %q", e.Pos.Ln, e.Pos.Col, e.Want, e.Got)
+	return fmt.Sprintf("parse error (cursor %d:%d): want %s, got %q", e.Cursor.Ln, e.Cursor.Col, e.Want, e.Got)
 }
 
 type Cursor struct {
