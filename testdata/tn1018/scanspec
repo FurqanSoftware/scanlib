@@ -1,0 +1,11 @@
+var T int
+scan T
+check T >= 1, T <= 100000
+eol
+for i := 0 ... T
+	var N int64
+	scan N
+	check N >= 3, N <= 1000000000000000000
+	eol
+end
+eof
