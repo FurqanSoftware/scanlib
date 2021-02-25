@@ -1,0 +1,31 @@
+var T int
+scan T
+check T >= 1, T <= 10
+eol
+for i := 0 ... T
+	var n, q int
+	scan n, q
+	check n >= 1, n <= 100000, q >= 1, q <= 100000
+	eol
+	var A [n]int
+	for j := 0 ... n
+		scan A[j]
+		check A[j] >= 1, A[j] <= 100000
+	end
+	eol
+	for j := 0 ... q
+		var c, x, y, idx int
+		scan c
+		check c == 1 || c == 2
+		if c == 1
+			scan x, y
+			check x >= 1, x <= 100000, y >= 1, y <= 100000
+		else if c == 2
+			scan idx
+			check idx >= 1, idx <= n
+		end
+		eol
+		
+	end
+end
+eof
