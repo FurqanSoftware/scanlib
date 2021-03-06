@@ -61,6 +61,8 @@ var Functions = map[string]func(args ...interface{}) (interface{}, error){
 		}
 		return math.Pow(n, exp), nil
 	},
+
+	"sum": sum,
 }
 
 func powInt(n int, exp int) int {
@@ -91,4 +93,32 @@ func powInt64(n int64, exp int64) int64 {
 		n *= n
 	}
 	return r
+}
+
+func sum(args ...interface{}) (interface{}, error) {
+	var r interface{} = 0
+	for _, a := range args {
+		switch a := a.(type) {
+		case int:
+			ri, _ := toInt(r)
+			r = ri + a
+
+		case int64:
+			ri, _ := toInt64(r)
+			r = ri + a
+
+		case []int:
+			args := []interface{}{}
+			for _, v := range a {
+				args = append(args, v)
+			}
+			s, err := sum(args...)
+			if err != nil {
+				return 0, err
+			}
+			ri, _ := toInt(r)
+			r = ri + s.(int)
+		}
+	}
+	return r, nil
 }
