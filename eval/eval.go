@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
@@ -90,7 +91,7 @@ func (e *Evaluator) varDecl(n *ast.VarDecl) error {
 	for _, x := range n.VarSpec.IdentList {
 		switch {
 		case n.VarSpec.Type.TypeName != nil:
-			e.ctx.Values[x] = Zero(ASTType[*n.VarSpec.Type.TypeName])
+			e.ctx.Values[x] = reflect.New(Types[*n.VarSpec.Type.TypeName])
 
 		case n.VarSpec.Type.TypeLit != nil:
 			l, err := evalExpr(e.ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
@@ -101,7 +102,10 @@ func (e *Evaluator) varDecl(n *ast.VarDecl) error {
 			if !ok {
 				return errors.New("invalid array bound")
 			}
-			e.ctx.Values[x] = MakeArray(ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName], []int{li})
+			// XXX(hjr265): This work's for one dimensional arrays only.
+			t := reflect.SliceOf(Types[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName])
+			v := reflect.MakeSlice(t, li, li)
+			e.ctx.Values[x] = v
 		}
 	}
 	return nil
@@ -109,33 +113,50 @@ func (e *Evaluator) varDecl(n *ast.VarDecl) error {
 
 func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 	for _, f := range n.RefList {
-		indices := []int{}
+		v, ok := e.ctx.Values[f.Ident]
+		if !ok {
+			return ErrUndefined{f.Ident}
+		}
 		for _, i := range f.Indices {
-			v, err := evalExpr(e.ctx, &i)
+			r, err := evalExpr(e.ctx, &i)
 			if err != nil {
 				return err
 			}
-			vi, ok := v.(int)
+			ri, ok := r.(int)
 			if !ok {
 				return ErrNonIntegerIndex{Pos: i.Pos}
 			}
-			indices = append(indices, vi)
+			v = v.Index(ri)
 		}
-		v := e.ctx.GetValue(f.Ident, indices)
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
 		var err error
-		switch v.Type {
-		case Bool:
-			v.Data, err = e.ctx.Input.Bool()
-		case Int:
-			v.Data, err = e.ctx.Input.Int()
-		case Int64:
-			v.Data, err = e.ctx.Input.Int64()
-		case Float32:
-			v.Data, err = e.ctx.Input.Float32()
-		case Float64:
-			v.Data, err = e.ctx.Input.Float64()
-		case String:
-			v.Data, err = e.ctx.Input.String()
+		switch v.Type() {
+		case Types["bool"]:
+			var d bool
+			d, err = e.ctx.Input.Bool()
+			v.SetBool(d)
+		case Types["int"]:
+			var d int
+			d, err = e.ctx.Input.Int()
+			v.SetInt(int64(d))
+		case Types["int64"]:
+			var d int64
+			d, err = e.ctx.Input.Int64()
+			v.SetInt(d)
+		case Types["float32"]:
+			var d float32
+			d, err = e.ctx.Input.Float32()
+			v.SetFloat(float64(d))
+		case Types["float64"]:
+			var d float64
+			d, err = e.ctx.Input.Float64()
+			v.SetFloat(d)
+		case Types["string"]:
+			var d string
+			d, err = e.ctx.Input.String()
+			v.SetString(d)
 		default:
 			return ErrCantScanType{}
 		}
@@ -145,7 +166,6 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 			}
 			return err
 		}
-		e.ctx.SetValue(f.Ident, indices, v)
 	}
 	return nil
 }
@@ -206,7 +226,7 @@ func (e *Evaluator) forStmt(n *ast.ForStmt) error {
 		return errors.New("invalid loop bound")
 	}
 	for i := li; i < hi; i++ {
-		e.ctx.Values[n.Range.Index] = Value{Int, i}
+		e.ctx.Values[n.Range.Index] = reflect.ValueOf(&i)
 		ast.Walk(e, &n.Block)
 	}
 	return nil
@@ -547,19 +567,22 @@ func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 		return Functions[n.CallExpr.Ident](args...)
 
 	case n.Variable != nil:
-		indices := []int{}
+		v := ctx.Values[n.Variable.Ident]
 		for _, i := range n.Variable.Indices {
-			v, err := evalExpr(ctx, &i)
+			r, err := evalExpr(ctx, &i)
 			if err != nil {
 				return nil, err
 			}
-			vi, ok := v.(int)
+			ri, ok := r.(int)
 			if !ok {
 				return nil, ErrNonIntegerIndex{Pos: i.Pos}
 			}
-			indices = append(indices, vi)
+			v = v.Index(ri)
 		}
-		return ctx.GetValue(n.Variable.Ident, indices).Data, nil
+		if v.Kind() == reflect.Ptr {
+			return v.Elem().Interface(), nil
+		}
+		return v.Interface(), nil
 
 	case n.BasicLit != nil:
 		return evalBasicLit(ctx, n.BasicLit)

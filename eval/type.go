@@ -1,28 +1,12 @@
 package eval
 
-type Value struct {
-	Type Type
-	Data interface{}
-}
+import "reflect"
 
-type Type int
-
-const (
-	Invalid Type = iota
-	Bool
-	Int
-	Int64
-	Float32
-	Float64
-	String
-	Array
-)
-
-var ASTType = map[string]Type{
-	"bool":    Bool,
-	"int":     Int,
-	"int64":   Int64,
-	"float32": Float32,
-	"float64": Float64,
-	"string":  String,
+var Types = map[string]reflect.Type{
+	"bool":    reflect.TypeOf(bool(false)),
+	"int":     reflect.TypeOf(int(0)),
+	"int64":   reflect.TypeOf(int64(0)),
+	"float32": reflect.TypeOf(float32(0)),
+	"float64": reflect.TypeOf(float64(0)),
+	"string":  reflect.TypeOf(string("")),
 }
