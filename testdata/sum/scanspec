@@ -1,0 +1,11 @@
+var n int
+scan n
+check n > 0, n < 10
+eol
+var A [n]int
+for i := 0 ... n
+	scan A[i]
+end
+check sum(A) > 0, sum(A) < 50
+eol
+eof
