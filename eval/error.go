@@ -42,6 +42,20 @@ func (e ErrNonIntegerIndex) Error() string {
 	return fmt.Sprintf("%d:%d: non-integer index", e.Pos.Line, e.Pos.Column)
 }
 
+type ErrInvalidIndex struct {
+	Pos    lexer.Position
+	Index  int
+	Length int
+}
+
+func (e ErrInvalidIndex) Error() string {
+	if e.Index >= 0 {
+		return fmt.Sprintf("%d:%d: invalid array index %d (out of bounds for %d-element array)", e.Pos.Line, e.Pos.Column, e.Index, e.Length)
+	} else {
+		return fmt.Sprintf("%d:%d: invalid array index %d (index must be non-negative)", e.Pos.Line, e.Pos.Column, e.Index)
+	}
+}
+
 type ErrCheckError struct {
 	Pos    lexer.Position
 	Clause int

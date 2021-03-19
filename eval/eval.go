@@ -126,6 +126,10 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 			if !ok {
 				return ErrNonIntegerIndex{Pos: i.Pos}
 			}
+			l := v.Len()
+			if ri < 0 || ri >= l {
+				return ErrInvalidIndex{Pos: i.Pos, Index: ri, Length: l}
+			}
 			v = v.Index(ri)
 		}
 		if v.Kind() == reflect.Ptr {
