@@ -55,3 +55,11 @@ func toFloat64(v interface{}) (float64, bool) {
 	}
 	return 0, false
 }
+
+func toString(v interface{}) (string, bool) {
+	switch v := v.(type) {
+	case string:
+		return v, true
+	}
+	return "", false
+}

@@ -443,6 +443,18 @@ func evalOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}
 		case ">":
 			return l > ri, nil
 		}
+
+	case string:
+		ri, ok := toString(r)
+		if !ok {
+			return nil, ErrInvalidOperation{Pos: n.Pos}
+		}
+		switch n.Operator {
+		case "==":
+			return l == ri, nil
+		case "!=":
+			return l != ri, nil
+		}
 	}
 	return nil, ErrInvalidOperation{}
 }

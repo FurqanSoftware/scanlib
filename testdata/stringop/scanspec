@@ -1,0 +1,25 @@
+var N, Q int
+scan N, Q
+check N >= 3, N <= 100000, Q >= 3, Q <= 100000
+eol
+for i := 0 ... N-1
+    var U, V int
+	scan U, V
+	check U >= 1, U <= N, V >= 1, V <= N, U != V
+	eol
+end
+for i := 0 ... Q
+    var op string
+	scan op
+	check op == "Answer" || op == "Add" || op == "Remove"
+	var A, B int
+	if op == "Add"
+	    scan A, B
+		check A >= 1, A <= N, B >= 1, B <= N, A != B
+	else if op == "Remove"
+	    scan A, B
+		check A >= 1, A <= N, B >= 1, B <= N, A != B
+	end
+	eol
+end
+eof
