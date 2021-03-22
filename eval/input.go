@@ -135,13 +135,14 @@ func (p *Input) scan() error {
 }
 
 func (p *Input) skipSpace() (bool, error) {
+	col := p.Cursor.Col
 	err := p.scan()
 	if err != nil {
 		return false, err
 	}
 	b := p.Scanner.Bytes()
 	r, _ := utf8.DecodeRune(b)
-	return r == ' ', nil
+	return col > 0 && r == ' ', nil
 }
 
 func (p *Input) pushCursor(b []byte) {
