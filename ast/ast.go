@@ -21,13 +21,14 @@ type Block struct {
 type Statement struct {
     Pos lexer.Position
 
-    VarDecl   *VarDecl   `  @@`
-    ScanStmt  *ScanStmt  `| @@`
-    CheckStmt *CheckStmt `| @@`
-    IfStmt    *IfStmt    `| @@`
-    ForStmt   *ForStmt   `| @@`
-    EOLStmt   *EOLStmt   `| @@`
-    EOFStmt   *EOFStmt   `| @@`
+    VarDecl    *VarDecl    `  @@`
+    ScanStmt   *ScanStmt   `| @@`
+    ScanlnStmt *ScanlnStmt `| @@`
+    CheckStmt  *CheckStmt  `| @@`
+    IfStmt     *IfStmt     `| @@`
+    ForStmt    *ForStmt    `| @@`
+    EOLStmt    *EOLStmt    `| @@`
+    EOFStmt    *EOFStmt    `| @@`
 }
 
 type VarDecl struct {
@@ -38,6 +39,12 @@ type ScanStmt struct {
     Pos lexer.Position
 
     RefList []Reference `"scan" @@ ( "," @@ )*`
+}
+
+type ScanlnStmt struct {
+    Pos lexer.Position
+
+    RefList []Reference `"scanln" @@ ( "," @@ )*`
 }
 
 type CheckStmt struct {
@@ -75,6 +82,12 @@ type EOFStmt struct {
 type VarSpec struct {
     IdentList []string `@Ident ( "," @Ident )*`
     Type      Type     `@@`
+}
+
+type LetSpec struct {
+    IdentList []string `@Ident ( "," @Ident )*`
+    Type      Type     `@@`
+    Reducer   string   `":" Ident`
 }
 
 type Type struct {
@@ -209,6 +222,7 @@ func (Block) node()            {}
 func (Statement) node()        {}
 func (VarDecl) node()          {}
 func (ScanStmt) node()         {}
+func (ScanlnStmt) node()       {}
 func (CheckStmt) node()        {}
 func (IfStmt) node()           {}
 func (IfBranch) node()         {}

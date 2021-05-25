@@ -58,6 +58,11 @@ func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
 		catch(err)
 		return nil
 
+	case *ast.ScanlnStmt:
+		err := e.scanlnStmt(n)
+		catch(err)
+		return nil
+
 	case *ast.CheckStmt:
 		err := e.checkStmt(n)
 		catch(err)
@@ -160,6 +165,49 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 		case Types["string"]:
 			var d string
 			d, err = e.ctx.Input.String()
+			v.SetString(d)
+		default:
+			return ErrCantScanType{}
+		}
+		if err != nil {
+			if err == io.EOF {
+				return ErrUnexpectedEOF{Pos: n.Pos}
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *Evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
+	for _, f := range n.RefList {
+		v, ok := e.ctx.Values[f.Ident]
+		if !ok {
+			return ErrUndefined{f.Ident}
+		}
+		for _, i := range f.Indices {
+			r, err := evalExpr(e.ctx, &i)
+			if err != nil {
+				return err
+			}
+			ri, ok := r.(int)
+			if !ok {
+				return ErrNonIntegerIndex{Pos: i.Pos}
+			}
+			l := v.Len()
+			if ri < 0 || ri >= l {
+				return ErrInvalidIndex{Pos: i.Pos, Index: ri, Length: l}
+			}
+			v = v.Index(ri)
+		}
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+		var err error
+		switch v.Type() {
+		case Types["string"]:
+			var d string
+			d, err = e.ctx.Input.StringLn()
 			v.SetString(d)
 		default:
 			return ErrCantScanType{}

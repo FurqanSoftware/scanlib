@@ -91,6 +91,23 @@ func (p *Input) String() (string, error) {
 	return string(b), nil
 }
 
+func (p *Input) StringLn() (string, error) {
+	b := []byte{}
+	for {
+		err := p.scan()
+		if err != nil {
+			return "", err
+		}
+		t := p.Scanner.Bytes()
+		r, _ := utf8.DecodeRune(t)
+		if r == '\n' {
+			break
+		}
+		b = append(b, t...)
+	}
+	return string(b), nil
+}
+
 func (p *Input) EOL() (bool, error) {
 	b, err := p.next()
 	if err != nil {

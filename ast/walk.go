@@ -27,6 +27,8 @@ func Walk(v Visitor, n Node) {
             Walk(v, n.VarDecl)
         case n.ScanStmt != nil:
             Walk(v, n.ScanStmt)
+        case n.ScanlnStmt != nil:
+            Walk(v, n.ScanlnStmt)
         case n.CheckStmt != nil:
             Walk(v, n.CheckStmt)
         case n.IfStmt != nil:
@@ -43,6 +45,11 @@ func Walk(v Visitor, n Node) {
         Walk(v, &n.VarSpec)
 
     case *ScanStmt:
+        for _, n := range n.RefList {
+            Walk(v, &n)
+        }
+
+    case *ScanlnStmt:
         for _, n := range n.RefList {
             Walk(v, &n)
         }

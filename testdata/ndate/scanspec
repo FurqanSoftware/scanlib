@@ -1,0 +1,26 @@
+var N int
+scan N
+check N >= 1, N <= 200
+eol
+
+for i := 0 ... N
+	var G string
+	scanln G
+    check re(G, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
+end
+
+var Q int
+scan Q
+check Q >= 1, Q <= 40000
+eol
+
+for i := 0 ... Q
+	var Ql string
+	scanln Ql
+    check re(Ql, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
+	var Qr string
+	scanln Qr
+    check re(Qr, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
+end
+
+eof
