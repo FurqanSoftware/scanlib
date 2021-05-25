@@ -43,7 +43,7 @@ func TestGenerate(t *testing.T) {
 			for _, fi := range fis {
 				codesrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), l.key+l.ext))
 				if os.IsNotExist(err) {
-					codesrc = []byte{}
+					t.Skip()
 				}
 
 				t.Run(fi.Name(), func(t *testing.T) {
