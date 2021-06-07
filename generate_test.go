@@ -9,6 +9,7 @@ import (
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 	"git.furqansoftware.net/toph/scanlib/gen/cpp14"
+	"git.furqansoftware.net/toph/scanlib/gen/go1"
 	"git.furqansoftware.net/toph/scanlib/gen/py3"
 )
 
@@ -24,6 +25,11 @@ var (
 			key:   "cpp14",
 			ext:   ".cpp",
 			genFn: cpp14.Generate,
+		},
+		{
+			key:   "go1",
+			ext:   ".go",
+			genFn: go1.Generate,
 		},
 		{
 			key:   "py3",
@@ -43,7 +49,7 @@ func TestGenerate(t *testing.T) {
 			for _, fi := range fis {
 				codesrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), l.key+l.ext))
 				if os.IsNotExist(err) {
-					t.Skip()
+					continue
 				}
 
 				t.Run(fi.Name(), func(t *testing.T) {
