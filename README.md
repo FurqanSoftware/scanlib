@@ -200,7 +200,7 @@ pow(n, e): Returns n raised to the power of e. Result is int or int64 if both n 
 
 - [x] If Statements
 - [ ] C Generator
-- [ ] Go Generator
+- [x] Go Generator
 - [ ] Graph Checks
 - [ ] CLI Tool
 - and more...
