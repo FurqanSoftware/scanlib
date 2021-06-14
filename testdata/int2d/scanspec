@@ -1,0 +1,11 @@
+var N, M int
+scan N, M
+eol
+var G [N][M]int
+for i := 0 ... N
+  for j := 0 ... M
+    scan G[i][j]
+  end
+  eol
+end
+eof

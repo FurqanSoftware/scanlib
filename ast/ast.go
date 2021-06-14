@@ -106,7 +106,7 @@ type ArrayType struct {
 
 type Reference struct {
     Ident   string `@Ident`
-    Indices []Expr `( "[" @@ "]" )?`
+    Indices []Expr `( "[" @@ "]" )*`
 }
 
 type Expr struct {
