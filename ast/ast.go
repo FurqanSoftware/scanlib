@@ -182,6 +182,8 @@ type Unary struct {
 }
 
 type Primary struct {
+    Pos lexer.Position
+
     BasicLit *BasicLit `  @@`
     CallExpr *CallExpr `| @@`
     Variable *Variable `| @@`

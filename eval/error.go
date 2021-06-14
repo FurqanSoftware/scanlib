@@ -7,11 +7,12 @@ import (
 )
 
 type ErrUndefined struct {
+	Pos  lexer.Position
 	Name string
 }
 
 func (e ErrUndefined) Error() string {
-	return "undefined: " + e.Name
+	return fmt.Sprintf("%d:%d: undefined: "+e.Name, e.Pos.Line, e.Pos.Column)
 }
 
 type ErrCantScanType struct{}

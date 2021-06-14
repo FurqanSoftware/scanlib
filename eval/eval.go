@@ -120,7 +120,7 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 	for _, f := range n.RefList {
 		v, ok := e.ctx.Values[f.Ident]
 		if !ok {
-			return ErrUndefined{f.Ident}
+			return ErrUndefined{Pos: n.Pos, Name: f.Ident}
 		}
 		for _, i := range f.Indices {
 			r, err := evalExpr(e.ctx, &i)
@@ -183,7 +183,7 @@ func (e *Evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
 	for _, f := range n.RefList {
 		v, ok := e.ctx.Values[f.Ident]
 		if !ok {
-			return ErrUndefined{f.Ident}
+			return ErrUndefined{Pos: n.Pos, Name: f.Ident}
 		}
 		for _, i := range f.Indices {
 			r, err := evalExpr(e.ctx, &i)
@@ -631,7 +631,10 @@ func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 		return Functions[n.CallExpr.Ident](args...)
 
 	case n.Variable != nil:
-		v := ctx.Values[n.Variable.Ident]
+		v, ok := ctx.Values[n.Variable.Ident]
+		if !ok {
+			return nil, ErrUndefined{Pos: n.Pos, Name: n.Variable.Ident}
+		}
 		for _, i := range n.Variable.Indices {
 			r, err := evalExpr(ctx, &i)
 			if err != nil {

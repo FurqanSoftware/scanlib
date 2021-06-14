@@ -1,0 +1,5 @@
+var R int
+scan R
+check r > 0
+eol
+eof

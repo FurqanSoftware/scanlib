@@ -1,0 +1,9 @@
+var Q int
+scan Q
+eol
+for i := 0 ... q
+	var a int
+	scan a
+	eol
+end
+eof
