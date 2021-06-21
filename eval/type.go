@@ -10,3 +10,5 @@ var Types = map[string]reflect.Type{
 	"float64": reflect.TypeOf(float64(0)),
 	"string":  reflect.TypeOf(string("")),
 }
+
+type Values map[string]reflect.Value

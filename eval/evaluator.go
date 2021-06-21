@@ -9,14 +9,26 @@ import (
 	"git.furqansoftware.net/toph/scanlib/ast"
 )
 
-type Evaluator struct {
-	ctx *Context
+type evaluator struct {
+	Source *ast.Source
+	Input  *Input
+	Values Values
 }
 
-func Evaluate(ctx *Context, n *ast.Source) (e *Evaluator, err error) {
-	e = &Evaluator{
-		ctx: ctx,
+func Evaluate(source *ast.Source, input io.Reader, options ...Option) (values Values, err error) {
+	e := evaluator{
+		Source: source,
+		Values: Values{},
 	}
+	e.Input, err = newInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, o := range options {
+		o.apply(&e)
+	}
+
 	defer func() {
 		v := recover()
 		if v == nil {
@@ -29,11 +41,12 @@ func Evaluate(ctx *Context, n *ast.Source) (e *Evaluator, err error) {
 			panic(err)
 		}
 	}()
-	ast.Walk(e, n)
-	return e, nil
+
+	ast.Walk(&e, e.Source)
+	return e.Values, nil
 }
 
-func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
+func (e *evaluator) Visit(n ast.Node) (w ast.Visitor) {
 	if n == nil {
 		return nil
 	}
@@ -92,14 +105,14 @@ func (e *Evaluator) Visit(n ast.Node) (w ast.Visitor) {
 	panic(fmt.Errorf("unreachable, with %T", n))
 }
 
-func (e *Evaluator) varDecl(n *ast.VarDecl) error {
+func (e *evaluator) varDecl(n *ast.VarDecl) error {
 	for _, x := range n.VarSpec.IdentList {
 		switch {
 		case n.VarSpec.Type.TypeName != nil:
-			e.ctx.Values[x] = reflect.New(Types[*n.VarSpec.Type.TypeName])
+			e.Values[x] = reflect.New(Types[*n.VarSpec.Type.TypeName])
 
 		case n.VarSpec.Type.TypeLit != nil:
-			l, err := evalExpr(e.ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
+			l, err := e.expr(&n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
 			if err != nil {
 				return err
 			}
@@ -110,20 +123,20 @@ func (e *Evaluator) varDecl(n *ast.VarDecl) error {
 			// XXX(hjr265): This work's for one dimensional arrays only.
 			t := reflect.SliceOf(Types[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName])
 			v := reflect.MakeSlice(t, li, li)
-			e.ctx.Values[x] = v
+			e.Values[x] = v
 		}
 	}
 	return nil
 }
 
-func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
+func (e *evaluator) scanStmt(n *ast.ScanStmt) error {
 	for _, f := range n.RefList {
-		v, ok := e.ctx.Values[f.Ident]
+		v, ok := e.Values[f.Ident]
 		if !ok {
 			return ErrUndefined{Pos: n.Pos, Name: f.Ident}
 		}
 		for _, i := range f.Indices {
-			r, err := evalExpr(e.ctx, &i)
+			r, err := e.expr(&i)
 			if err != nil {
 				return err
 			}
@@ -144,27 +157,27 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 		switch v.Type() {
 		case Types["bool"]:
 			var d bool
-			d, err = e.ctx.Input.Bool()
+			d, err = e.Input.readBool()
 			v.SetBool(d)
 		case Types["int"]:
 			var d int
-			d, err = e.ctx.Input.Int()
+			d, err = e.Input.readInt()
 			v.SetInt(int64(d))
 		case Types["int64"]:
 			var d int64
-			d, err = e.ctx.Input.Int64()
+			d, err = e.Input.readInt64()
 			v.SetInt(d)
 		case Types["float32"]:
 			var d float32
-			d, err = e.ctx.Input.Float32()
+			d, err = e.Input.readFloat32()
 			v.SetFloat(float64(d))
 		case Types["float64"]:
 			var d float64
-			d, err = e.ctx.Input.Float64()
+			d, err = e.Input.readFloat64()
 			v.SetFloat(d)
 		case Types["string"]:
 			var d string
-			d, err = e.ctx.Input.String()
+			d, err = e.Input.readString()
 			v.SetString(d)
 		default:
 			return ErrCantScanType{}
@@ -179,14 +192,14 @@ func (e *Evaluator) scanStmt(n *ast.ScanStmt) error {
 	return nil
 }
 
-func (e *Evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
+func (e *evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
 	for _, f := range n.RefList {
-		v, ok := e.ctx.Values[f.Ident]
+		v, ok := e.Values[f.Ident]
 		if !ok {
 			return ErrUndefined{Pos: n.Pos, Name: f.Ident}
 		}
 		for _, i := range f.Indices {
-			r, err := evalExpr(e.ctx, &i)
+			r, err := e.expr(&i)
 			if err != nil {
 				return err
 			}
@@ -207,7 +220,7 @@ func (e *Evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
 		switch v.Type() {
 		case Types["string"]:
 			var d string
-			d, err = e.ctx.Input.StringLn()
+			d, err = e.Input.readStringLn()
 			v.SetString(d)
 		default:
 			return ErrCantScanType{}
@@ -222,27 +235,27 @@ func (e *Evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
 	return nil
 }
 
-func (e *Evaluator) checkStmt(n *ast.CheckStmt) error {
+func (e *evaluator) checkStmt(n *ast.CheckStmt) error {
 	for i, x := range n.ExprList {
-		v, err := evalExpr(e.ctx, &x)
+		v, err := e.expr(&x)
 		if err != nil {
 			return err
 		}
 		vb, _ := v.(bool)
 		if !vb {
-			return ErrCheckError{Pos: n.Pos, Clause: i + 1, Cursor: e.ctx.Input.Cursor}
+			return ErrCheckError{Pos: n.Pos, Clause: i + 1, Cursor: e.Input.Cursor}
 		}
 	}
 	return nil
 }
 
-func (e *Evaluator) ifStmt(n *ast.IfStmt) error {
+func (e *evaluator) ifStmt(n *ast.IfStmt) error {
 	for _, n := range n.Branches {
 		cond := false
 		if n.Condition == nil {
 			cond = true
 		} else {
-			v, err := evalExpr(e.ctx, n.Condition)
+			v, err := e.expr(n.Condition)
 			if err != nil {
 				return err
 			}
@@ -260,8 +273,8 @@ func (e *Evaluator) ifStmt(n *ast.IfStmt) error {
 	return nil
 }
 
-func (e *Evaluator) forStmt(n *ast.ForStmt) error {
-	l, err := evalExpr(e.ctx, &n.Range.Low)
+func (e *evaluator) forStmt(n *ast.ForStmt) error {
+	l, err := e.expr(&n.Range.Low)
 	if err != nil {
 		return err
 	}
@@ -269,7 +282,7 @@ func (e *Evaluator) forStmt(n *ast.ForStmt) error {
 	if !ok {
 		return errors.New("invalid loop bound")
 	}
-	h, err := evalExpr(e.ctx, &n.Range.High)
+	h, err := e.expr(&n.Range.High)
 	if err != nil {
 		return err
 	}
@@ -278,14 +291,14 @@ func (e *Evaluator) forStmt(n *ast.ForStmt) error {
 		return errors.New("invalid loop bound")
 	}
 	for i := li; i < hi; i++ {
-		e.ctx.Values[n.Range.Index] = reflect.ValueOf(&i)
+		e.Values[n.Range.Index] = reflect.ValueOf(&i)
 		ast.Walk(e, &n.Block)
 	}
 	return nil
 }
 
-func (e *Evaluator) eolStmt(n *ast.EOLStmt) error {
-	eol, err := e.ctx.Input.EOL()
+func (e *evaluator) eolStmt(n *ast.EOLStmt) error {
+	eol, err := e.Input.isAtEOL()
 	if err != nil {
 		return err
 	}
@@ -295,24 +308,24 @@ func (e *Evaluator) eolStmt(n *ast.EOLStmt) error {
 	return nil
 }
 
-func (e *Evaluator) eofStmt(n *ast.EOFStmt) error {
-	eof, err := e.ctx.Input.EOF()
+func (e *evaluator) eofStmt(n *ast.EOFStmt) error {
+	eof, err := e.Input.isAtEOF()
 	if err != nil {
 		return err
 	}
 	if !eof {
-		return ErrExpectedEOF{Pos: n.Pos, Token: e.ctx.Input.Scanner.Bytes()}
+		return ErrExpectedEOF{Pos: n.Pos, Token: e.Input.Scanner.Bytes()}
 	}
 	return nil
 }
 
-func evalExpr(ctx *Context, n *ast.Expr) (interface{}, error) {
-	l, err := evalLogicalOr(ctx, n.Left)
+func (e *evaluator) expr(n *ast.Expr) (interface{}, error) {
+	l, err := e.logicalOr(n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := evalOpLogicalOr(ctx, c, l)
+		r, err := e.opLogicalOr(c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -321,13 +334,13 @@ func evalExpr(ctx *Context, n *ast.Expr) (interface{}, error) {
 	return l, nil
 }
 
-func evalLogicalOr(ctx *Context, n *ast.LogicalOr) (interface{}, error) {
-	l, err := evalLogicalAnd(ctx, n.Left)
+func (e *evaluator) logicalOr(n *ast.LogicalOr) (interface{}, error) {
+	l, err := e.logicalAnd(n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := evalOpLogicalAnd(ctx, c, l)
+		r, err := e.opLogicalAnd(c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -336,8 +349,8 @@ func evalLogicalOr(ctx *Context, n *ast.LogicalOr) (interface{}, error) {
 	return l, nil
 }
 
-func evalOpLogicalOr(ctx *Context, n *ast.OpLogicalOr, l interface{}) (interface{}, error) {
-	r, err := evalLogicalOr(ctx, n.LogicalOr)
+func (e *evaluator) opLogicalOr(n *ast.OpLogicalOr, l interface{}) (interface{}, error) {
+	r, err := e.logicalOr(n.LogicalOr)
 	if err != nil {
 		return nil, err
 	}
@@ -352,13 +365,13 @@ func evalOpLogicalOr(ctx *Context, n *ast.OpLogicalOr, l interface{}) (interface
 	return nil, ErrInvalidOperation{}
 }
 
-func evalLogicalAnd(ctx *Context, n *ast.LogicalAnd) (interface{}, error) {
-	l, err := evalRelative(ctx, n.Left)
+func (e *evaluator) logicalAnd(n *ast.LogicalAnd) (interface{}, error) {
+	l, err := e.relative(n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := evalOpRelative(ctx, c, l)
+		r, err := e.opRelative(c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -367,8 +380,8 @@ func evalLogicalAnd(ctx *Context, n *ast.LogicalAnd) (interface{}, error) {
 	return l, nil
 }
 
-func evalOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd, l interface{}) (interface{}, error) {
-	r, err := evalLogicalAnd(ctx, n.LogicalAnd)
+func (e *evaluator) opLogicalAnd(n *ast.OpLogicalAnd, l interface{}) (interface{}, error) {
+	r, err := e.logicalAnd(n.LogicalAnd)
 	if err != nil {
 		return nil, err
 	}
@@ -383,13 +396,13 @@ func evalOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd, l interface{}) (interfa
 	return nil, ErrInvalidOperation{}
 }
 
-func evalRelative(ctx *Context, n *ast.Relative) (interface{}, error) {
-	l, err := evalAddition(ctx, n.Left)
+func (e *evaluator) relative(n *ast.Relative) (interface{}, error) {
+	l, err := e.addition(n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := evalOpAddition(ctx, c, l)
+		r, err := e.opAddition(c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -398,8 +411,8 @@ func evalRelative(ctx *Context, n *ast.Relative) (interface{}, error) {
 	return l, nil
 }
 
-func evalOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}, error) {
-	r, err := evalRelative(ctx, n.Relative)
+func (e *evaluator) opRelative(n *ast.OpRelative, l interface{}) (interface{}, error) {
+	r, err := e.relative(n.Relative)
 	if err != nil {
 		return nil, err
 	}
@@ -511,13 +524,13 @@ func evalOpRelative(ctx *Context, n *ast.OpRelative, l interface{}) (interface{}
 	return nil, ErrInvalidOperation{}
 }
 
-func evalAddition(ctx *Context, n *ast.Addition) (interface{}, error) {
-	l, err := evalMultiplication(ctx, n.Left)
+func (e *evaluator) addition(n *ast.Addition) (interface{}, error) {
+	l, err := e.multiplication(n.Left)
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range n.Right {
-		r, err := evalOpMultiplication(ctx, c, l)
+		r, err := e.opMultiplication(c, l)
 		if err != nil {
 			return nil, err
 		}
@@ -526,8 +539,8 @@ func evalAddition(ctx *Context, n *ast.Addition) (interface{}, error) {
 	return l, nil
 }
 
-func evalOpAddition(ctx *Context, n *ast.OpAddition, l interface{}) (interface{}, error) {
-	r, err := evalAddition(ctx, n.Addition)
+func (e *evaluator) opAddition(n *ast.OpAddition, l interface{}) (interface{}, error) {
+	r, err := e.addition(n.Addition)
 	if err != nil {
 		return nil, err
 	}
@@ -583,21 +596,21 @@ func evalOpAddition(ctx *Context, n *ast.OpAddition, l interface{}) (interface{}
 	return nil, ErrInvalidOperation{}
 }
 
-func evalMultiplication(ctx *Context, n *ast.Multiplication) (interface{}, error) {
-	return evalUnary(ctx, n.Unary)
+func (e *evaluator) multiplication(n *ast.Multiplication) (interface{}, error) {
+	return e.unary(n.Unary)
 }
 
-func evalOpMultiplication(ctx *Context, n *ast.OpMultiplication, l interface{}) (interface{}, error) {
+func (e *evaluator) opMultiplication(n *ast.OpMultiplication, l interface{}) (interface{}, error) {
 	return l, nil
 }
 
-func evalUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
+func (e *evaluator) unary(n *ast.Unary) (interface{}, error) {
 	switch {
 	case n.Value != nil:
-		return evalPrimary(ctx, n.Value)
+		return e.primary(n.Value)
 
 	case n.Negated != nil:
-		v, err := evalPrimary(ctx, n.Negated)
+		v, err := e.primary(n.Negated)
 		if err != nil {
 			return nil, err
 		}
@@ -617,12 +630,12 @@ func evalUnary(ctx *Context, n *ast.Unary) (interface{}, error) {
 	panic("unreachable")
 }
 
-func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
+func (e *evaluator) primary(n *ast.Primary) (interface{}, error) {
 	switch {
 	case n.CallExpr != nil:
 		args := []interface{}{}
 		for _, a := range n.CallExpr.Args {
-			v, err := evalExpr(ctx, &a)
+			v, err := e.expr(&a)
 			if err != nil {
 				return nil, err
 			}
@@ -631,12 +644,12 @@ func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 		return Functions[n.CallExpr.Ident](args...)
 
 	case n.Variable != nil:
-		v, ok := ctx.Values[n.Variable.Ident]
+		v, ok := e.Values[n.Variable.Ident]
 		if !ok {
 			return nil, ErrUndefined{Pos: n.Pos, Name: n.Variable.Ident}
 		}
 		for _, i := range n.Variable.Indices {
-			r, err := evalExpr(ctx, &i)
+			r, err := e.expr(&i)
 			if err != nil {
 				return nil, err
 			}
@@ -652,16 +665,16 @@ func evalPrimary(ctx *Context, n *ast.Primary) (interface{}, error) {
 		return v.Interface(), nil
 
 	case n.BasicLit != nil:
-		return evalBasicLit(ctx, n.BasicLit)
+		return e.basicLit(n.BasicLit)
 
 	case n.SubExpr != nil:
-		return evalExpr(ctx, n.SubExpr)
+		return e.expr(n.SubExpr)
 	}
 
 	panic("unreachable")
 }
 
-func evalBasicLit(ctx *Context, n *ast.BasicLit) (interface{}, error) {
+func (e *evaluator) basicLit(n *ast.BasicLit) (interface{}, error) {
 	switch {
 	case n.FloatLit != nil:
 		return *n.FloatLit, nil

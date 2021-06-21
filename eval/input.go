@@ -13,7 +13,7 @@ type Input struct {
 	Cursor  Cursor
 }
 
-func NewInput(input io.Reader) (*Input, error) {
+func newInput(input io.Reader) (*Input, error) {
 	sc := bufio.NewScanner(input)
 	sc.Split(ScanTokens)
 	p := &Input{
@@ -23,7 +23,7 @@ func NewInput(input io.Reader) (*Input, error) {
 	return p, nil
 }
 
-func (p *Input) Bool() (bool, error) {
+func (p *Input) readBool() (bool, error) {
 	b, err := p.next()
 	if err != nil {
 		return false, err
@@ -35,7 +35,7 @@ func (p *Input) Bool() (bool, error) {
 	return v, nil
 }
 
-func (p *Input) Int() (int, error) {
+func (p *Input) readInt() (int, error) {
 	b, err := p.next()
 	if err != nil {
 		return 0, err
@@ -47,7 +47,7 @@ func (p *Input) Int() (int, error) {
 	return int(n), nil
 }
 
-func (p *Input) Int64() (int64, error) {
+func (p *Input) readInt64() (int64, error) {
 	b, err := p.next()
 	if err != nil {
 		return 0, err
@@ -59,7 +59,7 @@ func (p *Input) Int64() (int64, error) {
 	return n, nil
 }
 
-func (p *Input) Float32() (float32, error) {
+func (p *Input) readFloat32() (float32, error) {
 	b, err := p.next()
 	if err != nil {
 		return 0, err
@@ -71,7 +71,7 @@ func (p *Input) Float32() (float32, error) {
 	return float32(f), nil
 }
 
-func (p *Input) Float64() (float64, error) {
+func (p *Input) readFloat64() (float64, error) {
 	b, err := p.next()
 	if err != nil {
 		return 0, err
@@ -83,7 +83,7 @@ func (p *Input) Float64() (float64, error) {
 	return float64(f), nil
 }
 
-func (p *Input) String() (string, error) {
+func (p *Input) readString() (string, error) {
 	b, err := p.next()
 	if err != nil {
 		return "", err
@@ -91,7 +91,7 @@ func (p *Input) String() (string, error) {
 	return string(b), nil
 }
 
-func (p *Input) StringLn() (string, error) {
+func (p *Input) readStringLn() (string, error) {
 	b := []byte{}
 	for {
 		err := p.scan()
@@ -108,7 +108,7 @@ func (p *Input) StringLn() (string, error) {
 	return string(b), nil
 }
 
-func (p *Input) EOL() (bool, error) {
+func (p *Input) isAtEOL() (bool, error) {
 	b, err := p.next()
 	if err != nil {
 		return false, err
@@ -116,7 +116,7 @@ func (p *Input) EOL() (bool, error) {
 	return bytes.Equal(b, []byte("\n")), nil
 }
 
-func (p *Input) EOF() (bool, error) {
+func (p *Input) isAtEOF() (bool, error) {
 	b, err := p.next()
 	if len(b) == 0 && err == nil {
 		return true, nil

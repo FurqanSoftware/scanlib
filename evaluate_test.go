@@ -40,11 +40,7 @@ func TestEvaluate(t *testing.T) {
 
 					errstr, _ := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "inputs", strings.TrimSuffix(pi.Name(), ".in")+".err"))
 
-					ctx, err := eval.NewContext(bytes.NewReader(instr))
-					if err != nil {
-						t.Fatal(err)
-					}
-					_, err = eval.Evaluate(ctx, n)
+					_, err = eval.Evaluate(n, bytes.NewReader(instr))
 					if err != nil {
 						if err.Error() != string(errstr) {
 							t.Fatalf("want err == %q, got %q", string(errstr), err.Error())
