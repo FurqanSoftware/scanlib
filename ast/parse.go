@@ -2,11 +2,11 @@ package ast
 
 import (
 	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/participle/v2/lexer/stateful"
+	"github.com/alecthomas/participle/v2/lexer"
 )
 
 var parser = participle.MustBuild(&Source{},
-	participle.Lexer(stateful.MustSimple([]stateful.Rule{
+	participle.Lexer(lexer.MustSimple([]lexer.Rule{
 		{"comment", `#[^\n]*`, nil},
 		{"whitespace", `[ \t]+`, nil},
 		{"Float", `\d+\.\d*`, nil},
