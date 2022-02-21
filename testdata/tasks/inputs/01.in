@@ -1,0 +1,19 @@
+2
+3
+sleep 1 eat
+eat 1 run
+run 0
+2
+sleep
+run
+5
+breakfast 0
+study 1 breakfast
+play 1 breakfast
+sleep 2 play study
+lunch 1 study
+4
+study
+lunch
+play
+sleep

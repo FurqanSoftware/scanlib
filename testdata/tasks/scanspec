@@ -1,0 +1,29 @@
+var T int
+scan T
+eol
+for i := 0 ... T
+	var n int
+	scan n
+	eol
+
+	for j := 0 ... n
+		var k string
+		var m int
+		scan k, m
+		var d [m]string
+		for u := 0 ... m
+			scan d[u]
+		end
+		eol
+	end
+
+	var q int
+	scan q
+	eol
+	for j := 0 ... q
+		var k string
+		scan k
+		eol
+	end
+end
+eof
