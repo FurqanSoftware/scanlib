@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
+	"github.com/alecthomas/participle/v2/lexer"
 )
 
 type evaluator struct {
@@ -186,7 +187,7 @@ func (e *evaluator) scanStmt(n *ast.ScanStmt) error {
 			if err == io.EOF {
 				return ErrUnexpectedEOF{Pos: n.Pos}
 			}
-			return err
+			return e.enrichError(err, n.Pos)
 		}
 	}
 	return nil
@@ -229,7 +230,7 @@ func (e *evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
 			if err == io.EOF {
 				return ErrUnexpectedEOF{Pos: n.Pos}
 			}
-			return err
+			return e.enrichError(err, n.Pos)
 		}
 	}
 	return nil
@@ -303,7 +304,7 @@ func (e *evaluator) eolStmt(n *ast.EOLStmt) error {
 		return err
 	}
 	if !eol {
-		return ErrExpectedEOL{Pos: n.Pos}
+		return ErrExpectedEOL{Pos: n.Pos, Got: e.Input.Scanner.Bytes(), Cursor: e.Input.Cursor}
 	}
 	return nil
 }
@@ -314,7 +315,7 @@ func (e *evaluator) eofStmt(n *ast.EOFStmt) error {
 		return err
 	}
 	if !eof {
-		return ErrExpectedEOF{Pos: n.Pos, Token: e.Input.Scanner.Bytes()}
+		return ErrExpectedEOF{Pos: n.Pos, Got: e.Input.Scanner.Bytes()}
 	}
 	return nil
 }
@@ -687,4 +688,12 @@ func (e *evaluator) basicLit(n *ast.BasicLit) (interface{}, error) {
 	}
 
 	panic("unreachable")
+}
+
+func (e *evaluator) enrichError(err error, pos lexer.Position) error {
+	switch err := err.(type) {
+	case ErrBadParse:
+		err.Pos = pos
+	}
+	return err
 }

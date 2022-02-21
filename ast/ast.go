@@ -105,6 +105,8 @@ type ArrayType struct {
 }
 
 type Reference struct {
+    Pos lexer.Position
+
     Ident   string `@Ident`
     Indices []Expr `( "[" @@ "]" )*`
 }
