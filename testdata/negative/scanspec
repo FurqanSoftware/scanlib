@@ -1,0 +1,9 @@
+var A, B int
+scan A, B
+if A == -B
+	check 0 != 0
+else
+	check 0 == 0
+end
+eol
+eof

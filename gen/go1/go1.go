@@ -158,12 +158,12 @@ func (g *Generator) ifStmt(n *ast.IfStmt) error {
 			g.ctx.cw.Print(" else ")
 		}
 		if n.Condition != nil {
-			g.ctx.cw.Print("if (")
+			g.ctx.cw.Print("if ")
 			err := genExpr(g.ctx, n.Condition)
 			if err != nil {
 				return err
 			}
-			g.ctx.cw.Printf(") {")
+			g.ctx.cw.Printf(" {")
 		} else {
 			g.ctx.cw.Printf("{")
 		}
@@ -298,7 +298,15 @@ func genOpMultiplication(ctx *Context, n *ast.OpMultiplication) error {
 }
 
 func genUnary(ctx *Context, n *ast.Unary) error {
-	return genPrimary(ctx, n.Value)
+	switch {
+	case n.Value != nil:
+		return genPrimary(ctx, n.Value)
+
+	case n.Negated != nil:
+		ctx.cw.Print("-")
+		return genPrimary(ctx, n.Negated)
+	}
+	panic("unreachable")
 }
 
 func genPrimary(ctx *Context, n *ast.Primary) error {

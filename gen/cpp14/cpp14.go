@@ -293,7 +293,15 @@ func genOpMultiplication(ctx *Context, n *ast.OpMultiplication) error {
 }
 
 func genUnary(ctx *Context, n *ast.Unary) error {
-	return genPrimary(ctx, n.Value)
+	switch {
+	case n.Value != nil:
+		return genPrimary(ctx, n.Value)
+
+	case n.Negated != nil:
+		ctx.cw.Print("-")
+		return genPrimary(ctx, n.Negated)
+	}
+	panic("unreachable")
 }
 
 func genPrimary(ctx *Context, n *ast.Primary) error {
