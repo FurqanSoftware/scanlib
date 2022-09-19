@@ -1,0 +1,5 @@
+var S string
+scanln S
+var A, B string
+scanln A, B
+eof

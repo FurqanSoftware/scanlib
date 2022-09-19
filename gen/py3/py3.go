@@ -58,6 +58,10 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 		g.scanStmt(n)
 		return nil
 
+	case *ast.ScanlnStmt:
+		g.scanlnStmt(n)
+		return nil
+
 	case *ast.IfStmt:
 		g.ifStmt(n)
 		return nil
@@ -124,6 +128,32 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 			g.ctx.cw.Print("]")
 		}
 		g.ctx.cw.Printf(" = %s(_.pop(0))", g.ctx.types[f.Ident+strings.Repeat("[]", len(f.Indices))])
+		g.ctx.cw.Println()
+	}
+	return nil
+}
+
+func (g *Generator) scanlnStmt(n *ast.ScanlnStmt) error {
+	oz, ok := g.analyzer.ozs[n]
+	if ok {
+		return oz.Generate(g.ctx)
+	}
+
+	for _, f := range n.RefList {
+		g.ctx.cw.Printf("%s", f.Ident)
+		for _, i := range f.Indices {
+			g.ctx.cw.Print("[")
+			err := genExpr(g.ctx, &i)
+			if err != nil {
+				return err
+			}
+			g.ctx.cw.Print("]")
+		}
+		if g.ctx.types[f.Ident+strings.Repeat("[]", len(f.Indices))] == "string" {
+			g.ctx.cw.Printf(" = input()")
+		} else {
+			g.ctx.cw.Printf(" = %s(input())", g.ctx.types[f.Ident+strings.Repeat("[]", len(f.Indices))])
+		}
 		g.ctx.cw.Println()
 	}
 	return nil

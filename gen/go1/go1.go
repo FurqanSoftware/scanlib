@@ -77,6 +77,10 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 		g.scanStmt(n)
 		return nil
 
+	case *ast.ScanlnStmt:
+		g.scanlnStmt(n)
+		return nil
+
 	case *ast.IfStmt:
 		g.ifStmt(n)
 		return nil
@@ -149,6 +153,24 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 	}
 	g.ctx.cw.Print(")")
 	g.ctx.cw.Println()
+	return nil
+}
+
+func (g *Generator) scanlnStmt(n *ast.ScanlnStmt) error {
+	g.ctx.imports["fmt"] = true
+	for _, f := range n.RefList {
+		g.ctx.cw.Printf("fmt.Scanln(&%s", f.Ident)
+		for _, i := range f.Indices {
+			g.ctx.cw.Print("[")
+			err := genExpr(g.ctx, &i)
+			if err != nil {
+				return err
+			}
+			g.ctx.cw.Print("]")
+		}
+		g.ctx.cw.Print(")")
+		g.ctx.cw.Println()
+	}
 	return nil
 }
 
