@@ -1,6 +1,6 @@
 var cmd string
 for scan cmd
-	check re("^PUSH|POP|PRINT|SIZE|SUM|REPEAT|REVERSE$", cmd)
+	check re(cmd, "^(PUSH|POP|PRINT|SIZE|SUM|REPEAT|REVERSE)$")
 	var param int
 	if cmd == "PUSH" || cmd == "REPEAT"
 		scan param

@@ -319,6 +319,7 @@ func (e *evaluator) forStmtScan(n *ast.ForStmt) error {
 			}
 			return err
 		}
+		ast.Walk(e, &n.Block)
 	}
 	return nil
 }
@@ -332,6 +333,7 @@ func (e *evaluator) forStmtlnScan(n *ast.ForStmt) error {
 			}
 			return err
 		}
+		ast.Walk(e, &n.Block)
 	}
 	return nil
 }
