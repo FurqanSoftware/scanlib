@@ -69,11 +69,11 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 		return nil
 
 	case *ast.ScanStmt:
-		g.scanStmt(n)
+		g.scanStmt(n, false)
 		return nil
 
 	case *ast.ScanlnStmt:
-		g.scanlnStmt(n)
+		g.scanlnStmt(n, false)
 		return nil
 
 	case *ast.IfStmt:
@@ -133,8 +133,8 @@ func (g *Generator) varDecl(n *ast.VarDecl) error {
 	return nil
 }
 
-func (g *Generator) scanStmt(n *ast.ScanStmt) error {
-	g.ctx.cw.Printf("cin")
+func (g *Generator) scanStmt(n *ast.ScanStmt, asexpr bool) error {
+	g.ctx.cw.Print("cin")
 	for _, f := range n.RefList {
 		g.ctx.cw.Printf(" >> %s", f.Ident)
 		for _, i := range f.Indices {
@@ -146,13 +146,18 @@ func (g *Generator) scanStmt(n *ast.ScanStmt) error {
 			g.ctx.cw.Print("]")
 		}
 	}
-	g.ctx.cw.Print(";")
-	g.ctx.cw.Println()
+	if !asexpr {
+		g.ctx.cw.Print(";")
+		g.ctx.cw.Println()
+	}
 	return nil
 }
 
-func (g *Generator) scanlnStmt(n *ast.ScanlnStmt) error {
-	for _, f := range n.RefList {
+func (g *Generator) scanlnStmt(n *ast.ScanlnStmt, asexpr bool) error {
+	for i, f := range n.RefList {
+		if asexpr && i > 0 {
+			g.ctx.cw.Print(" && ")
+		}
 		g.ctx.cw.Printf("getline(cin, %s", f.Ident)
 		for _, i := range f.Indices {
 			g.ctx.cw.Print("[")
@@ -162,8 +167,10 @@ func (g *Generator) scanlnStmt(n *ast.ScanlnStmt) error {
 			}
 			g.ctx.cw.Print("]")
 		}
-		g.ctx.cw.Print(");")
-		g.ctx.cw.Println()
+		if !asexpr {
+			g.ctx.cw.Print(");")
+			g.ctx.cw.Println()
+		}
 	}
 	return nil
 }
@@ -179,21 +186,33 @@ func (g *Generator) ifStmt(n *ast.IfStmt) error {
 			if err != nil {
 				return err
 			}
-			g.ctx.cw.Printf(") {")
+			g.ctx.cw.Print(") {")
 		} else {
-			g.ctx.cw.Printf("{")
+			g.ctx.cw.Print("{")
 		}
 		g.ctx.cw.Println()
 		g.ctx.cw.Indent(1)
 		ast.Walk(g, &n.Block)
 		g.ctx.cw.Indent(-1)
-		g.ctx.cw.Printf("}")
+		g.ctx.cw.Print("}")
 	}
 	g.ctx.cw.Println()
 	return nil
 }
 
 func (g *Generator) forStmt(n *ast.ForStmt) error {
+	switch {
+	case n.Range != nil:
+		return g.forRangeStmt(n)
+	case n.Scan != nil:
+		return g.forScanStmt(n)
+	case n.Scanln != nil:
+		return g.forScanlnStmt(n)
+	}
+	panic("unreachable")
+}
+
+func (g *Generator) forRangeStmt(n *ast.ForStmt) error {
 	g.ctx.cw.Printf("for (int %s = ", n.Range.Index)
 	err := genExpr(g.ctx, &n.Range.Low)
 	if err != nil {
@@ -204,12 +223,38 @@ func (g *Generator) forStmt(n *ast.ForStmt) error {
 	if err != nil {
 		return err
 	}
-	g.ctx.cw.Printf("; ++i) {")
+	g.ctx.cw.Print("; ++i) {")
 	g.ctx.cw.Println()
 	g.ctx.cw.Indent(1)
 	ast.Walk(g, &n.Block)
 	g.ctx.cw.Indent(-1)
-	g.ctx.cw.Printf("}")
+	g.ctx.cw.Print("}")
+	g.ctx.cw.Println()
+	return nil
+}
+
+func (g *Generator) forScanStmt(n *ast.ForStmt) error {
+	g.ctx.cw.Print("while (")
+	g.scanStmt(n.Scan, true)
+	g.ctx.cw.Print(") {")
+	g.ctx.cw.Println()
+	g.ctx.cw.Indent(1)
+	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
+	g.ctx.cw.Print("}")
+	g.ctx.cw.Println()
+	return nil
+}
+
+func (g *Generator) forScanlnStmt(n *ast.ForStmt) error {
+	g.ctx.cw.Print("while (")
+	g.scanlnStmt(n.Scanln, true)
+	g.ctx.cw.Print(") {")
+	g.ctx.cw.Println()
+	g.ctx.cw.Indent(1)
+	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
+	g.ctx.cw.Print("}")
 	g.ctx.cw.Println()
 	return nil
 }
@@ -352,7 +397,7 @@ func genPrimary(ctx *Context, n *ast.Primary) error {
 		// 	indices = append(indices, vi)
 		// }
 		// return ctx.GetValue(n.Variable.Identifier, indices).Data, nil
-		ctx.cw.Printf(n.Variable.Ident)
+		ctx.cw.Print(n.Variable.Ident)
 		return nil
 
 	case n.BasicLit != nil:

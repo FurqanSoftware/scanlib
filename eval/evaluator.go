@@ -275,6 +275,18 @@ func (e *evaluator) ifStmt(n *ast.IfStmt) error {
 }
 
 func (e *evaluator) forStmt(n *ast.ForStmt) error {
+	switch {
+	case n.Range != nil:
+		return e.forStmtRange(n)
+	case n.Scan != nil:
+		return e.forStmtScan(n)
+	case n.Scanln != nil:
+		return e.forStmtlnScan(n)
+	}
+	panic("unreachable")
+}
+
+func (e *evaluator) forStmtRange(n *ast.ForStmt) error {
 	l, err := e.expr(&n.Range.Low)
 	if err != nil {
 		return err
@@ -294,6 +306,32 @@ func (e *evaluator) forStmt(n *ast.ForStmt) error {
 	for i := li; i < hi; i++ {
 		e.Values[n.Range.Index] = reflect.ValueOf(&i)
 		ast.Walk(e, &n.Block)
+	}
+	return nil
+}
+
+func (e *evaluator) forStmtScan(n *ast.ForStmt) error {
+	for {
+		err := e.scanStmt(n.Scan)
+		if err != nil {
+			if errors.As(err, &ErrUnexpectedEOF{}) {
+				break
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *evaluator) forStmtlnScan(n *ast.ForStmt) error {
+	for {
+		err := e.scanlnStmt(n.Scanln)
+		if err != nil {
+			if errors.As(err, &ErrUnexpectedEOF{}) {
+				break
+			}
+			return err
+		}
 	}
 	return nil
 }

@@ -20,7 +20,7 @@ func (o multiVar) Generate(ctx *Context) error {
 	t := ASTType[*o.varDecl.VarSpec.Type.TypeName]
 	if len(o.scanStmt.RefList) == 1 {
 		if t == "string" {
-			ctx.cw.Printf(" = input()")
+			ctx.cw.Print(" = input()")
 		} else {
 			ctx.cw.Printf(" = %s(input())", t)
 		}

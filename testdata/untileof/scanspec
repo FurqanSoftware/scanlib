@@ -1,0 +1,12 @@
+var cmd string
+for scan cmd
+	check re("^PUSH|POP|PRINT|SIZE|SUM|REPEAT|REVERSE$", cmd)
+	var param int
+	if cmd == "PUSH" || cmd == "REPEAT"
+		scan param
+	end
+	if cmd == "REPEAT"
+		check param > 0, param < pow(10, 6)
+	end
+	eol
+end

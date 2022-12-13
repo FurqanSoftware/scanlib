@@ -165,11 +165,28 @@ else
 end
 ```
 
-#### For Statements
+#### For Range Statements
 
 ```
 for i := 0 ... n
 	scan G[i]
+end
+```
+
+#### For Scan/Scanln Statements
+
+```
+var s string
+var i int
+for scan s, i
+	# Scans s and i repeatedly until EOF
+end
+```
+
+```
+var s string
+for scanln s
+	# Scans line to s repeatedly until EOF
 end
 ```
 

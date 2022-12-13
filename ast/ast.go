@@ -63,8 +63,10 @@ type IfBranch struct {
 }
 
 type ForStmt struct {
-    Range RangeClause `"for" @@ EOL+`
-    Block Block       `@@ "end"`
+    Range  *RangeClause `"for" ( @@`
+    Scan   *ScanStmt    `| @@`
+    Scanln *ScanlnStmt  `| @@ ) EOL+`
+    Block  Block        `@@ "end"`
 }
 
 type EOLStmt struct {

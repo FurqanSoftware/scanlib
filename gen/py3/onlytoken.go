@@ -25,7 +25,7 @@ func (o onlyToken) Generate(ctx *Context) error {
 	}
 	t := ctx.types[o.scanStmt.RefList[0].Ident+strings.Repeat("[]", len(o.scanStmt.RefList[0].Indices))]
 	if t == "string" {
-		ctx.cw.Printf(" = input()")
+		ctx.cw.Print(" = input()")
 	} else {
 		ctx.cw.Printf(" = %s(input())", t)
 	}

@@ -69,7 +69,14 @@ func Walk(v Visitor, n Node) {
         Walk(v, &n.Block)
 
     case *ForStmt:
-        Walk(v, &n.Range)
+        switch {
+        case n.Range != nil:
+            Walk(v, n.Range)
+        case n.Scan != nil:
+            Walk(v, n.Scan)
+        case n.Scanln != nil:
+            Walk(v, n.Scanln)
+        }
         Walk(v, &n.Block)
 
     case *EOLStmt:

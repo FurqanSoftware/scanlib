@@ -84,12 +84,15 @@ func (a *analyzer) arrayLine(n *ast.Block) {
 				return false
 
 			case *ast.ForStmt:
-				if exprEqInt64(&n.Range.Low, 0) &&
-					exprEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.Range.High) {
-					oz.forStmt = n
-					state++
-					depth++
-					return true
+				switch {
+				case n.Range != nil:
+					if exprEqInt64(&n.Range.Low, 0) &&
+						exprEq(&oz.varDecl.VarSpec.Type.TypeLit.ArrayType.ArrayLength, &n.Range.High) {
+						oz.forStmt = n
+						state++
+						depth++
+						return true
+					}
 				}
 
 			default:

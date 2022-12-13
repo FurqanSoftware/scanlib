@@ -150,7 +150,7 @@ func (g *Generator) scanlnStmt(n *ast.ScanlnStmt) error {
 			g.ctx.cw.Print("]")
 		}
 		if g.ctx.types[f.Ident+strings.Repeat("[]", len(f.Indices))] == "string" {
-			g.ctx.cw.Printf(" = input()")
+			g.ctx.cw.Print(" = input()")
 		} else {
 			g.ctx.cw.Printf(" = %s(input())", g.ctx.types[f.Ident+strings.Repeat("[]", len(f.Indices))])
 		}
@@ -171,9 +171,9 @@ func (g *Generator) ifStmt(n *ast.IfStmt) error {
 			if err != nil {
 				return err
 			}
-			g.ctx.cw.Printf(":")
+			g.ctx.cw.Print(":")
 		} else {
-			g.ctx.cw.Printf("else:")
+			g.ctx.cw.Print("else:")
 		}
 		g.ctx.cw.Println()
 		g.ctx.cw.Indent(1)
@@ -188,6 +188,18 @@ func (g *Generator) ifStmt(n *ast.IfStmt) error {
 }
 
 func (g *Generator) forStmt(n *ast.ForStmt) error {
+	switch {
+	case n.Range != nil:
+		return g.forRangeStmt(n)
+	case n.Scan != nil:
+		return g.forScanStmt(n)
+	case n.Scanln != nil:
+		return g.forScanlnStmt(n)
+	}
+	panic("unreachable")
+}
+
+func (g *Generator) forRangeStmt(n *ast.ForStmt) error {
 	oz, ok := g.analyzer.ozs[n]
 	if ok {
 		return oz.Generate(g.ctx)
@@ -203,10 +215,42 @@ func (g *Generator) forStmt(n *ast.ForStmt) error {
 	if err != nil {
 		return err
 	}
-	g.ctx.cw.Printf("):")
+	g.ctx.cw.Print("):")
 	g.ctx.cw.Println()
 	g.ctx.cw.Indent(1)
 	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
+	return nil
+}
+
+func (g *Generator) forScanStmt(n *ast.ForStmt) error {
+	g.ctx.cw.Println("while True:")
+	g.ctx.cw.Indent(1)
+	g.ctx.cw.Println("try:")
+	g.ctx.cw.Indent(1)
+	g.scanStmt(n.Scan)
+	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
+	g.ctx.cw.Println("except EOFError as _:")
+	g.ctx.cw.Indent(1)
+	g.ctx.cw.Println("break")
+	g.ctx.cw.Indent(-1)
+	g.ctx.cw.Indent(-1)
+	return nil
+}
+
+func (g *Generator) forScanlnStmt(n *ast.ForStmt) error {
+	g.ctx.cw.Println("while True:")
+	g.ctx.cw.Indent(1)
+	g.ctx.cw.Println("try:")
+	g.ctx.cw.Indent(1)
+	g.scanlnStmt(n.Scanln)
+	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
+	g.ctx.cw.Println("except EOFError as _:")
+	g.ctx.cw.Indent(1)
+	g.ctx.cw.Println("break")
+	g.ctx.cw.Indent(-1)
 	g.ctx.cw.Indent(-1)
 	return nil
 }
@@ -336,7 +380,7 @@ func genPrimary(ctx *Context, n *ast.Primary) error {
 	case n.CallExpr != nil:
 
 	case n.Variable != nil:
-		ctx.cw.Printf(n.Variable.Ident)
+		ctx.cw.Print(n.Variable.Ident)
 		return nil
 
 	case n.BasicLit != nil:
