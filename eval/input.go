@@ -14,13 +14,22 @@ type Input struct {
 }
 
 func newInput(input io.Reader) (*Input, error) {
+	p := Input{}
 	sc := bufio.NewScanner(input)
-	sc.Split(ScanTokens)
-	p := &Input{
-		Scanner: sc,
-		Cursor:  Cursor{1, 0},
-	}
-	return p, nil
+	sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		advance, token, err = scanTokens(data, atEOF)
+		r, _ := utf8.DecodeRune(token)
+		if r == '\n' {
+			p.Cursor.Ln++
+			p.Cursor.Col = 0
+		} else {
+			p.Cursor.Col += advance
+		}
+		return
+	})
+	p.Scanner = sc
+	p.Cursor = Cursor{1, 0}
+	return &p, nil
 }
 
 func (p *Input) readBool() (bool, error) {
@@ -103,6 +112,9 @@ func (p *Input) readStringLn() (string, error) {
 		if r == '\n' {
 			break
 		}
+		if len(b) > 0 {
+			b = append(b, ' ')
+		}
 		b = append(b, t...)
 	}
 	return string(b), nil
@@ -117,23 +129,17 @@ func (p *Input) isAtEOL() (bool, error) {
 }
 
 func (p *Input) isAtEOF() (bool, error) {
-	b, err := p.next()
-	if len(b) == 0 && err == nil {
+	_, err := p.next()
+	if err == io.EOF {
 		return true, nil
 	}
 	return false, err
 }
 
 func (p *Input) next() ([]byte, error) {
-	skip, err := p.skipSpace()
+	err := p.scan()
 	if err != nil {
 		return nil, err
-	}
-	if skip {
-		err := p.scan()
-		if err != nil {
-			return nil, err
-		}
 	}
 	b := p.Scanner.Bytes()
 	return b, nil
@@ -147,7 +153,6 @@ func (p *Input) scan() error {
 		}
 		return err
 	}
-	p.pushCursor(p.Scanner.Bytes())
 	return nil
 }
 
@@ -162,21 +167,10 @@ func (p *Input) skipSpace() (bool, error) {
 	return col > 0 && r == ' ', nil
 }
 
-func (p *Input) pushCursor(b []byte) {
-	r, _ := utf8.DecodeRune(b)
-	if r == '\n' {
-		p.Cursor.Ln++
-		p.Cursor.Col = 0
-	} else {
-		p.Cursor.Col += len(b)
-	}
-}
-
-// ScanTokens is a split function for a Scanner that returns each
-// space-separated word of text, including the space that follows it. It will
-// never return an empty string. The definition of space is set by
-// isSpace.
-func ScanTokens(data []byte, atEOF bool) (advance int, token []byte, err error) {
+// scanTokens is a split function for a Scanner that returns spaces and words
+// separately. It consumes a blank space (' ') if it appears immediately
+// after a word. The definition of space is set by isSpace.
+func scanTokens(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	// Return any leading space.
 	r, width := utf8.DecodeRune(data)
 	if isSpace(r) {
@@ -186,15 +180,18 @@ func ScanTokens(data []byte, atEOF bool) (advance int, token []byte, err error) 
 	for i := width; i < len(data); i += width {
 		r, width = utf8.DecodeRune(data[i:])
 		if isSpace(r) {
+			if r == ' ' {
+				return i + 1, data[:i], nil
+			}
 			return i, data[:i], nil
 		}
 	}
 	// If we're not at EOF, request more data.
-	if !atEOF {
-		return 0, nil, nil
+	if atEOF && len(data) > 0 {
+		return len(data), data, nil
 	}
-	// Return the final token.
-	return len(data), data, bufio.ErrFinalToken
+	// Request more data.
+	return 0, nil, nil
 }
 
 // isSpace reports whether the character is a Unicode white space character.
