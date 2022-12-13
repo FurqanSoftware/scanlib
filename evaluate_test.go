@@ -3,6 +3,7 @@ package scanlib
 import (
 	"bytes"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -18,6 +19,11 @@ func TestEvaluate(t *testing.T) {
 	}
 	for _, fi := range fis {
 		t.Run(fi.Name(), func(t *testing.T) {
+			_, err := os.Stat(filepath.Join("./testdata", fi.Name(), "_skip"))
+			if err == nil {
+				t.Skip()
+			}
+
 			specsrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "scanspec"))
 			if err != nil {
 				t.Fatal(err)
