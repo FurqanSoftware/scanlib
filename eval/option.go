@@ -12,6 +12,6 @@ func (f optionFunc) apply(e *evaluator) {
 
 func ScannerBuffer(buf []byte, max int) Option {
 	return optionFunc(func(e *evaluator) {
-		e.Input.Scanner.Buffer(buf, max)
+		e.Input.sc.Buffer(buf, max)
 	})
 }

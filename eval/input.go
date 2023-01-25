@@ -9,26 +9,22 @@ import (
 )
 
 type Input struct {
-	Scanner *bufio.Scanner
-	Cursor  Cursor
+	sc *bufio.Scanner
+
+	token []byte
+	ahead [][]byte
+	err   error
+
+	cur, curnext Cursor
 }
 
 func newInput(input io.Reader) (*Input, error) {
-	p := Input{}
+	p := Input{
+		curnext: Cursor{1, 0},
+	}
 	sc := bufio.NewScanner(input)
-	sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
-		advance, token, err = scanTokens(data, atEOF)
-		r, _ := utf8.DecodeRune(token)
-		if r == '\n' {
-			p.Cursor.Ln++
-			p.Cursor.Col = 0
-		} else {
-			p.Cursor.Col += advance
-		}
-		return
-	})
-	p.Scanner = sc
-	p.Cursor = Cursor{1, 0}
+	sc.Split(scanTokens)
+	p.sc = sc
 	return &p, nil
 }
 
@@ -39,7 +35,7 @@ func (p *Input) readBool() (bool, error) {
 	}
 	v, err := strconv.ParseBool(string(b))
 	if err != nil {
-		return false, ErrBadParse{Want: "bool", Got: b, Cursor: p.Cursor}
+		return false, ErrBadParse{Want: "bool", Got: b, Cursor: p.cur}
 	}
 	return v, nil
 }
@@ -51,7 +47,7 @@ func (p *Input) readInt() (int, error) {
 	}
 	n, err := strconv.ParseInt(string(b), 10, 32)
 	if err != nil {
-		return 0, ErrBadParse{Want: "int", Got: b, Cursor: p.Cursor}
+		return 0, ErrBadParse{Want: "int", Got: b, Cursor: p.cur}
 	}
 	return int(n), nil
 }
@@ -63,7 +59,7 @@ func (p *Input) readInt64() (int64, error) {
 	}
 	n, err := strconv.ParseInt(string(b), 10, 64)
 	if err != nil {
-		return 0, ErrBadParse{Want: "int64", Got: b, Cursor: p.Cursor}
+		return 0, ErrBadParse{Want: "int64", Got: b, Cursor: p.cur}
 	}
 	return n, nil
 }
@@ -75,7 +71,7 @@ func (p *Input) readFloat32() (float32, error) {
 	}
 	f, err := strconv.ParseFloat(string(b), 32)
 	if err != nil {
-		return 0, ErrBadParse{Want: "float32", Got: b, Cursor: p.Cursor}
+		return 0, ErrBadParse{Want: "float32", Got: b, Cursor: p.cur}
 	}
 	return float32(f), nil
 }
@@ -87,7 +83,7 @@ func (p *Input) readFloat64() (float64, error) {
 	}
 	f, err := strconv.ParseFloat(string(b), 64)
 	if err != nil {
-		return 0, ErrBadParse{Want: "float64", Got: b, Cursor: p.Cursor}
+		return 0, ErrBadParse{Want: "float64", Got: b, Cursor: p.cur}
 	}
 	return float64(f), nil
 }
@@ -101,21 +97,9 @@ func (p *Input) readString() (string, error) {
 }
 
 func (p *Input) readStringLn() (string, error) {
-	b := []byte{}
-	for {
-		err := p.scan()
-		if err != nil {
-			return "", err
-		}
-		t := p.Scanner.Bytes()
-		r, _ := utf8.DecodeRune(t)
-		if r == '\n' {
-			break
-		}
-		if len(b) > 0 {
-			b = append(b, ' ')
-		}
-		b = append(b, t...)
+	b, err := p.nextLn()
+	if err != nil {
+		return "", nil
 	}
 	return string(b), nil
 }
@@ -137,39 +121,92 @@ func (p *Input) isAtEOF() (bool, error) {
 }
 
 func (p *Input) next() ([]byte, error) {
-	err := p.scan()
-	if err != nil {
-		return nil, err
+	p.scan()
+
+	if len(p.ahead) > 0 {
+		b := p.ahead[0]
+		p.token = b
+
+		copy(p.ahead, p.ahead[1:])
+		p.ahead = p.ahead[:len(p.ahead)-1]
+
+		r, _ := utf8.DecodeRune(b)
+		p.cur = p.curnext
+		if r == '\n' {
+			p.curnext.Ln++
+			p.curnext.Col = 0
+		} else {
+			p.curnext.Col += len(b)
+		}
+
+		if !isSpace(r) && len(p.ahead) == 2 {
+			r0, _ := utf8.DecodeRune(p.ahead[0])
+			r1, _ := utf8.DecodeRune(p.ahead[1])
+			if r0 == ' ' && !isSpace(r1) {
+				// Drop sandwiched space.
+				copy(p.ahead, p.ahead[1:])
+				p.ahead = p.ahead[:len(p.ahead)-1]
+
+				p.curnext.Col++
+			}
+		}
+
+		return b, nil
 	}
-	b := p.Scanner.Bytes()
+
+	return nil, p.err
+}
+
+func (p *Input) nextLn() ([]byte, error) {
+	if p.err != nil {
+		return nil, p.err
+	}
+
+	p.cur = p.curnext
+
+	b := []byte{}
+	for {
+		p.scan()
+
+		t := p.ahead[0]
+		copy(p.ahead, p.ahead[1:])
+		p.ahead = p.ahead[:len(p.ahead)-1]
+
+		r, _ := utf8.DecodeRune(t)
+		if r == '\n' {
+			p.curnext.Ln++
+			p.curnext.Col = 0
+			break
+		} else {
+			p.curnext.Col += len(t)
+		}
+
+		b = append(b, t...)
+	}
+	p.token = b
+
 	return b, nil
 }
 
-func (p *Input) scan() error {
-	if !p.Scanner.Scan() {
-		err := p.Scanner.Err()
-		if err == nil {
-			err = io.EOF
+func (p *Input) scan() {
+	for len(p.ahead) < 3 && p.err == nil {
+		if !p.sc.Scan() {
+			p.err = p.sc.Err()
+			if p.err == nil {
+				p.err = io.EOF
+			}
+			return
 		}
-		return err
+		b := p.sc.Bytes()
+		t := make([]byte, len(b))
+		copy(t, b)
+		p.ahead = append(p.ahead, t)
 	}
-	return nil
-}
-
-func (p *Input) skipSpace() (bool, error) {
-	col := p.Cursor.Col
-	err := p.scan()
-	if err != nil {
-		return false, err
-	}
-	b := p.Scanner.Bytes()
-	r, _ := utf8.DecodeRune(b)
-	return col > 0 && r == ' ', nil
+	return
 }
 
 // scanTokens is a split function for a Scanner that returns spaces and words
-// separately. It consumes a blank space (' ') if it appears immediately
-// after a word. The definition of space is set by isSpace.
+// separately. The definition of space is set by isSpace.
 func scanTokens(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	// Return any leading space.
 	r, width := utf8.DecodeRune(data)
@@ -180,14 +217,11 @@ func scanTokens(data []byte, atEOF bool) (advance int, token []byte, err error) 
 	for i := width; i < len(data); i += width {
 		r, width = utf8.DecodeRune(data[i:])
 		if isSpace(r) {
-			if r == ' ' {
-				return i + 1, data[:i], nil
-			}
 			return i, data[:i], nil
 		}
 	}
-	// If we're not at EOF, request more data.
 	if atEOF && len(data) > 0 {
+		// If we're at EOF, return data.
 		return len(data), data, nil
 	}
 	// Request more data.

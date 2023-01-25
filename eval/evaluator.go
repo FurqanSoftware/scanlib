@@ -244,7 +244,7 @@ func (e *evaluator) checkStmt(n *ast.CheckStmt) error {
 		}
 		vb, _ := v.(bool)
 		if !vb {
-			return ErrCheckError{Pos: n.Pos, Clause: i + 1, Cursor: e.Input.Cursor}
+			return ErrCheckError{Pos: n.Pos, Clause: i + 1, Cursor: e.Input.cur}
 		}
 	}
 	return nil
@@ -344,7 +344,7 @@ func (e *evaluator) eolStmt(n *ast.EOLStmt) error {
 		return err
 	}
 	if !eol {
-		return ErrExpectedEOL{Pos: n.Pos, Got: e.Input.Scanner.Bytes(), Cursor: e.Input.Cursor}
+		return ErrExpectedEOL{Pos: n.Pos, Got: e.Input.token, Cursor: e.Input.cur}
 	}
 	return nil
 }
@@ -355,7 +355,7 @@ func (e *evaluator) eofStmt(n *ast.EOFStmt) error {
 		return err
 	}
 	if !eof {
-		return ErrExpectedEOF{Pos: n.Pos, Got: e.Input.Scanner.Bytes()}
+		return ErrExpectedEOF{Pos: n.Pos, Got: e.Input.token}
 	}
 	return nil
 }
