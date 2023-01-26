@@ -237,14 +237,14 @@ func (e *evaluator) scanlnStmt(n *ast.ScanlnStmt) error {
 }
 
 func (e *evaluator) checkStmt(n *ast.CheckStmt) error {
-	for i, x := range n.ExprList {
+	for _, x := range n.ExprList {
 		v, err := e.expr(&x)
 		if err != nil {
 			return err
 		}
 		vb, _ := v.(bool)
 		if !vb {
-			return ErrCheckError{Pos: n.Pos, Clause: i + 1, Cursor: e.Input.cur}
+			return ErrCheckError{Pos: n.Pos, Cursor: e.Input.cur, Expr: &x, Values: e.Values}
 		}
 	}
 	return nil

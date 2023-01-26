@@ -3,6 +3,7 @@ package eval
 import (
 	"fmt"
 
+	"git.furqansoftware.net/toph/scanlib/ast"
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
@@ -59,12 +60,41 @@ func (e ErrInvalidIndex) Error() string {
 
 type ErrCheckError struct {
 	Pos    lexer.Position
-	Clause int
 	Cursor Cursor
+	Expr   *ast.Expr
+	Values Values
 }
 
 func (e ErrCheckError) Error() string {
-	return fmt.Sprintf("%d:%d: check error (clause %d, cursor %d:%d)", e.Pos.Line, e.Pos.Column, e.Clause, e.Cursor.Ln, e.Cursor.Col)
+	vars := []string{}
+	varsseen := map[string]bool{}
+	ast.Inspect(e.Expr, func(n ast.Node) bool {
+		switch n := n.(type) {
+		case *ast.Variable:
+			if varsseen[n.Ident] || len(n.Indices) > 0 {
+				return true
+			}
+			varsseen[n.Ident] = true
+			vars = append(vars, n.Ident)
+		}
+		return len(vars) < 3
+	})
+	s := []byte{}
+	for _, t := range e.Expr.Tokens {
+		s = append(s, []byte(t.Value)...)
+	}
+	msg := fmt.Sprintf("%d:%d: check error %s", e.Pos.Line, e.Pos.Column, ellipsize(s, 20))
+	if len(vars) > 0 {
+		msg += " ("
+		for i, k := range vars {
+			if i > 0 {
+				msg += ", "
+			}
+			msg += fmt.Sprintf("%s=%#v", k, e.Values[k].Elem().Interface())
+		}
+		msg += ")"
+	}
+	return msg
 }
 
 type ErrExpectedEOL struct {
@@ -116,6 +146,14 @@ func (e ErrBadParse) Error() string {
 
 type Cursor struct {
 	Ln, Col int
+}
+
+func ellipsize(b []byte, n int) string {
+	r := []rune(string(b))
+	if len(r) > n {
+		return string(r[:n]) + "..."
+	}
+	return string(r)
 }
 
 func catch(err error) {

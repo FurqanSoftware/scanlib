@@ -139,7 +139,9 @@ func Walk(v Visitor, n Node) {
 
     case *Multiplication:
         Walk(v, n.Unary)
-        Walk(v, n.Exponent)
+        if n.Exponent != nil {
+            Walk(v, n.Exponent)
+        }
 
     case *OpMultiplication:
         Walk(v, n.Factor)
@@ -153,6 +155,26 @@ func Walk(v Visitor, n Node) {
         }
 
     case *Primary:
+        switch {
+        // case n.BasicLit != nil:
+        //     Walk(v, n.BasicLit)
+        case n.CallExpr != nil:
+            Walk(v, n.CallExpr)
+        case n.Variable != nil:
+            Walk(v, n.Variable)
+        case n.SubExpr != nil:
+            Walk(v, n.SubExpr)
+        }
+
+    case *Variable:
+        for _, n := range n.Indices {
+            Walk(v, &n)
+        }
+
+    case *CallExpr:
+        for _, n := range n.Args {
+            Walk(v, &n)
+        }
 
     default:
         panic(fmt.Errorf("unreachable, with %T", n))

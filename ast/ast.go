@@ -114,7 +114,8 @@ type Reference struct {
 }
 
 type Expr struct {
-    Pos lexer.Position
+    Pos    lexer.Position
+    Tokens []lexer.Token
 
     Left  *LogicalOr     `@@`
     Right []*OpLogicalOr `@@*`
@@ -253,4 +254,7 @@ func (Multiplication) node()   {}
 func (OpMultiplication) node() {}
 func (Unary) node()            {}
 func (Primary) node()          {}
+func (BasicLit) node()         {}
 func (RangeClause) node()      {}
+func (Variable) node()         {}
+func (CallExpr) node()         {}
