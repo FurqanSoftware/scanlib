@@ -83,7 +83,7 @@ func (e ErrCheckError) Error() string {
 	for _, t := range e.Expr.Tokens {
 		s = append(s, []byte(t.Value)...)
 	}
-	msg := fmt.Sprintf("%d:%d: check error %s", e.Pos.Line, e.Pos.Column, ellipsize(s, 20))
+	msg := fmt.Sprintf("%d:%d~%d:%d: check error %s", e.Pos.Line, e.Pos.Column, e.Cursor.Ln, e.Cursor.Col, ellipsize(s, 20))
 	if len(vars) > 0 {
 		msg += " ("
 		for i, k := range vars {
@@ -104,7 +104,7 @@ type ErrExpectedEOL struct {
 }
 
 func (e ErrExpectedEOL) Error() string {
-	return fmt.Sprintf("%d:%d: (cursor %d:%d): want EOL, got %q", e.Pos.Line, e.Pos.Column, e.Cursor.Ln, e.Cursor.Col, e.Got)
+	return fmt.Sprintf("%d:%d~%d:%d: want EOL, got %q", e.Pos.Line, e.Pos.Column, e.Cursor.Ln, e.Cursor.Col, e.Got)
 
 }
 
@@ -141,7 +141,7 @@ type ErrBadParse struct {
 }
 
 func (e ErrBadParse) Error() string {
-	return fmt.Sprintf("%d:%d: parse error (cursor %d:%d): want %s, got %q", e.Pos.Line, e.Pos.Column, e.Cursor.Ln, e.Cursor.Col, e.Want, e.Got)
+	return fmt.Sprintf("%d:%d~%d:%d: parse error: want %s, got %q", e.Pos.Line, e.Pos.Column, e.Cursor.Ln, e.Cursor.Col, e.Want, e.Got)
 }
 
 type Cursor struct {

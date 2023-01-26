@@ -1,1 +1,1 @@
-0:0: parse error (cursor 2:1): want int, got " "
+0:0~2:1: parse error: want int, got " "
