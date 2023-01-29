@@ -1,8 +1,10 @@
 package eval
 
 import (
+	"errors"
 	"math"
 	"regexp"
+	"strconv"
 )
 
 var Functions = map[string]func(args ...interface{}) (interface{}, error){
@@ -63,6 +65,27 @@ var Functions = map[string]func(args ...interface{}) (interface{}, error){
 	},
 
 	"sum": sum,
+
+	"toInt64": func(args ...interface{}) (interface{}, error) {
+		switch n := args[0].(type) {
+		case int:
+			return int64(n), nil
+
+		case string:
+			base := 10
+			if len(args) == 2 {
+				var ok bool
+				base, ok = args[1].(int)
+				if !ok {
+					return 0, errors.New("toInt64: base is not int")
+				}
+			}
+			return strconv.ParseInt(n, base, 64)
+
+		default:
+			return 0, errors.New("toInt64: want string")
+		}
+	},
 }
 
 func powInt(n int, exp int) int {

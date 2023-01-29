@@ -1,0 +1,19 @@
+var R, C int
+scan R, C
+check R >= 1, R <= 1000
+check C >= 1, C <= 1000
+eol
+
+for i := 0 ... R
+	for j := 0 ... C
+		var X string
+		scan X
+		check re(X, "^(\\d+|=[A-Z]+\\d+[+-/*][A-Z]+\\d+)$")
+		if re(X, "^\\d+$")
+			check toInt64(X) >= -2147483648, toInt64(X) <= 2147483647
+		end
+	end
+	eol
+end
+
+eof
