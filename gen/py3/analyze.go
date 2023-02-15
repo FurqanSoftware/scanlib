@@ -49,7 +49,7 @@ func findBlockEOLs(a *analyzer, n *ast.Source) {
 			stack = stack[:len(stack)-1]
 		}
 		switch n := n.(type) {
-		case *ast.Source, *ast.Block, *ast.Statement, *ast.ForStmt, *ast.IfStmt:
+		case *ast.Source, *ast.Block, *ast.Statement, *ast.ForStmt, *ast.IfStmt, *ast.IfBranch:
 			stack = append(stack, n)
 			return true
 		case *ast.EOLStmt:
