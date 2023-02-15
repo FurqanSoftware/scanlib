@@ -642,7 +642,60 @@ func (e *evaluator) multiplication(n *ast.Multiplication) (interface{}, error) {
 }
 
 func (e *evaluator) opMultiplication(n *ast.OpMultiplication, l interface{}) (interface{}, error) {
-	return l, nil
+	r, err := e.multiplication(n.Factor)
+	if err != nil {
+		return nil, err
+	}
+	switch l := l.(type) {
+	case int:
+		ri, ok := toInt(r)
+		if !ok {
+			return nil, ErrInvalidOperation{Pos: n.Pos}
+		}
+		switch n.Operator {
+		case "*":
+			return l * ri, nil
+		case "/":
+			return l / ri, nil
+		}
+
+	case int64:
+		ri, ok := toInt64(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "*":
+			return l * ri, nil
+		case "/":
+			return l / ri, nil
+		}
+
+	case float32:
+		ri, ok := toFloat32(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "*":
+			return l * ri, nil
+		case "/":
+			return l / ri, nil
+		}
+
+	case float64:
+		ri, ok := toFloat64(r)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		switch n.Operator {
+		case "*":
+			return l * ri, nil
+		case "/":
+			return l / ri, nil
+		}
+	}
+	return nil, ErrInvalidOperation{}
 }
 
 func (e *evaluator) unary(n *ast.Unary) (interface{}, error) {

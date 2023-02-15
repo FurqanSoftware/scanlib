@@ -177,6 +177,8 @@ type Multiplication struct {
 }
 
 type OpMultiplication struct {
+    Pos lexer.Position
+
     Operator Operator        `@("*" | "/")`
     Factor   *Multiplication `@@`
 }

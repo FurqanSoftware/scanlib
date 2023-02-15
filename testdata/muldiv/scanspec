@@ -1,0 +1,19 @@
+var A, B, C, D int
+scan A, B, C, D
+check A * B == C
+check A / B == D
+eol
+
+var Af, Bf, Cf, Df float64
+scan Af, Bf, Cf, Df
+check Af * Bf > Cf-0.0001, Af * Bf < Cf+0.0001
+check Af / Bf > Df-0.0001, Af / Bf < Df+0.0001
+eol
+
+var T string
+if A*B == 0
+	scan T
+	eol
+end
+
+eof
