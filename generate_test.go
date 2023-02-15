@@ -1,7 +1,6 @@
 package scanlib
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"git.furqansoftware.net/toph/scanlib/gen/cpp14"
 	"git.furqansoftware.net/toph/scanlib/gen/go1"
 	"git.furqansoftware.net/toph/scanlib/gen/py3"
+	"github.com/google/go-cmp/cmp"
 )
 
 type language struct {
@@ -66,8 +66,9 @@ func TestGenerate(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					if !bytes.Equal(code, codesrc) {
-						t.Errorf("want:\n\n%s\n\ngot:\n\n%s", codesrc, code)
+					diff := cmp.Diff(code, codesrc)
+					if diff != "" {
+						t.Errorf("want:\n\n%s\n\ngot:\n\n%sdiff:\n\n%s", codesrc, code, diff)
 					}
 				})
 			}
