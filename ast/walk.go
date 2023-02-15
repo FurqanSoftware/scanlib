@@ -45,23 +45,23 @@ func Walk(v Visitor, n Node) {
         Walk(v, &n.VarSpec)
 
     case *ScanStmt:
-        for _, n := range n.RefList {
-            Walk(v, &n)
+        for i := range n.RefList {
+            Walk(v, &n.RefList[i])
         }
 
     case *ScanlnStmt:
-        for _, n := range n.RefList {
-            Walk(v, &n)
+        for i := range n.RefList {
+            Walk(v, &n.RefList[i])
         }
 
     case *CheckStmt:
-        for _, n := range n.ExprList {
-            Walk(v, &n)
+        for i := range n.ExprList {
+            Walk(v, &n.ExprList[i])
         }
 
     case *IfStmt:
-        for _, n := range n.Branches {
-            Walk(v, &n)
+        for i := range n.Branches {
+            Walk(v, &n.Branches[i])
         }
 
     case *IfBranch:
@@ -167,13 +167,13 @@ func Walk(v Visitor, n Node) {
         }
 
     case *Variable:
-        for _, n := range n.Indices {
-            Walk(v, &n)
+        for i := range n.Indices {
+            Walk(v, &n.Indices[i])
         }
 
     case *CallExpr:
-        for _, n := range n.Args {
-            Walk(v, &n)
+        for i := range n.Args {
+            Walk(v, &n.Args[i])
         }
 
     default:
