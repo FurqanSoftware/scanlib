@@ -44,9 +44,6 @@ func (a *analyzer) sameLine(n *ast.Block) {
 				scanStmt: n,
 			}
 			return false
-
-		default:
-			return false
 		}
 
 		return false
