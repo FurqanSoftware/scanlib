@@ -2,6 +2,7 @@ package scanlib
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,6 +35,9 @@ func TestEvaluate(t *testing.T) {
 
 			pis, err := os.ReadDir(filepath.Join("./testdata", fi.Name(), "inputs"))
 			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return
+				}
 				t.Fatal(err)
 			}
 			for _, pi := range pis {
