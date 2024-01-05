@@ -33,6 +33,9 @@ func TestEvaluate(t *testing.T) {
 			}
 
 			pis, err := os.ReadDir(filepath.Join("./testdata", fi.Name(), "inputs"))
+			if err != nil {
+				t.Fatal(err)
+			}
 			for _, pi := range pis {
 				if !strings.HasSuffix(pi.Name(), ".in") {
 					continue
