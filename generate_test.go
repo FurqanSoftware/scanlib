@@ -1,7 +1,6 @@
 package scanlib
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -40,20 +39,20 @@ var (
 )
 
 func TestGenerate(t *testing.T) {
-	fis, err := ioutil.ReadDir("./testdata")
+	fis, err := os.ReadDir("./testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, l := range langs {
 		t.Run(l.key, func(t *testing.T) {
 			for _, fi := range fis {
-				codesrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), l.key+l.ext))
+				codesrc, err := os.ReadFile(filepath.Join("./testdata", fi.Name(), l.key+l.ext))
 				if os.IsNotExist(err) {
 					continue
 				}
 
 				t.Run(fi.Name(), func(t *testing.T) {
-					specsrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "scanspec"))
+					specsrc, err := os.ReadFile(filepath.Join("./testdata", fi.Name(), "scanspec"))
 					if err != nil {
 						t.Fatal(err)
 					}

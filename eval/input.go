@@ -202,7 +202,6 @@ func (p *Input) scan() {
 		copy(t, b)
 		p.ahead = append(p.ahead, t)
 	}
-	return
 }
 
 // scanTokens is a split function for a Scanner that returns spaces and words

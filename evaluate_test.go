@@ -2,7 +2,6 @@ package scanlib
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +12,7 @@ import (
 )
 
 func TestEvaluate(t *testing.T) {
-	fis, err := ioutil.ReadDir("./testdata")
+	fis, err := os.ReadDir("./testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +23,7 @@ func TestEvaluate(t *testing.T) {
 				t.Skip()
 			}
 
-			specsrc, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "scanspec"))
+			specsrc, err := os.ReadFile(filepath.Join("./testdata", fi.Name(), "scanspec"))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -33,18 +32,18 @@ func TestEvaluate(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			pis, err := ioutil.ReadDir(filepath.Join("./testdata", fi.Name(), "inputs"))
+			pis, err := os.ReadDir(filepath.Join("./testdata", fi.Name(), "inputs"))
 			for _, pi := range pis {
 				if !strings.HasSuffix(pi.Name(), ".in") {
 					continue
 				}
 				t.Run(pi.Name(), func(t *testing.T) {
-					instr, err := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "inputs", pi.Name()))
+					instr, err := os.ReadFile(filepath.Join("./testdata", fi.Name(), "inputs", pi.Name()))
 					if err != nil {
 						t.Fatal(err)
 					}
 
-					errstr, _ := ioutil.ReadFile(filepath.Join("./testdata", fi.Name(), "inputs", strings.TrimSuffix(pi.Name(), ".in")+".err"))
+					errstr, _ := os.ReadFile(filepath.Join("./testdata", fi.Name(), "inputs", strings.TrimSuffix(pi.Name(), ".in")+".err"))
 
 					_, err = eval.Evaluate(n, bytes.NewReader(instr))
 					if err != nil {
