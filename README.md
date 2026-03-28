@@ -123,7 +123,7 @@ A comment begins with the # character, and ends at the end of the line. A commen
 #### Keywords
 
 ```
-check else end eof eol for if let scan scanln var
+check else end eof eol for if scan scanln var
 ```
 
 #### Types
@@ -184,21 +184,11 @@ else
 end
 ```
 
-#### Let Statements
+#### Assignment Statements
 
 ```
-let s int :sum
-```
-
-Let statements declare accumulator variables with a reducer. Values are fed into the accumulator using `<-`:
-
-```
-let s int :sum
-for i := 0 ... N
-	var A int
-	scan A
-	s <- A
-end
+s = s + A
+G[i] = G[i] + 1
 ```
 
 #### For Range Statements

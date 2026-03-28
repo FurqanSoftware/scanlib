@@ -101,6 +101,11 @@ func (e *evaluator) Visit(n ast.Node) (w ast.Visitor) {
 		err := e.eofStmt(n)
 		catch(err)
 		return nil
+
+	case *ast.AssignStmt:
+		err := e.assignStmt(n)
+		catch(err)
+		return nil
 	}
 
 	panic(fmt.Errorf("unreachable, with %T", n))
@@ -127,6 +132,38 @@ func (e *evaluator) varDecl(n *ast.VarDecl) error {
 			e.Values[x] = v
 		}
 	}
+	return nil
+}
+
+func (e *evaluator) assignStmt(n *ast.AssignStmt) error {
+	v, ok := e.Values[n.Ref.Ident]
+	if !ok {
+		return ErrUndefined{Pos: n.Pos, Name: n.Ref.Ident}
+	}
+	for _, i := range n.Ref.Indices {
+		r, err := e.expr(&i)
+		if err != nil {
+			return err
+		}
+		ri, ok := r.(int)
+		if !ok {
+			return ErrNonIntegerIndex{Pos: i.Pos}
+		}
+		l := v.Len()
+		if ri < 0 || ri >= l {
+			return ErrInvalidIndex{Pos: i.Pos, Index: ri, Length: l}
+		}
+		v = v.Index(ri)
+	}
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	val, err := e.expr(&n.Value)
+	if err != nil {
+		return err
+	}
+	v.Set(reflect.ValueOf(val))
 	return nil
 }
 

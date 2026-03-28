@@ -39,6 +39,8 @@ func Walk(v Visitor, n Node) {
             Walk(v, n.EOLStmt)
         case n.EOFStmt != nil:
             Walk(v, n.EOFStmt)
+        case n.AssignStmt != nil:
+            Walk(v, n.AssignStmt)
         }
 
     case *VarDecl:
@@ -85,6 +87,10 @@ func Walk(v Visitor, n Node) {
 
     case *VarSpec:
         Walk(v, &n.Type)
+
+    case *AssignStmt:
+        Walk(v, &n.Ref)
+        Walk(v, &n.Value)
 
     case *Type:
         Walk(v, n.TypeLit)

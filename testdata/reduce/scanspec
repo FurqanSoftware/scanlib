@@ -1,0 +1,12 @@
+var N int
+scan N
+eol
+var s int
+for i := 0 ... N
+    var A int
+    scan A
+    s = s + A
+end
+check s < 1000
+eol
+eof

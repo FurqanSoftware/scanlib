@@ -29,6 +29,7 @@ type Statement struct {
     ForStmt    *ForStmt    `| @@`
     EOLStmt    *EOLStmt    `| @@`
     EOFStmt    *EOFStmt    `| @@`
+    AssignStmt *AssignStmt `| @@`
 }
 
 type VarDecl struct {
@@ -86,10 +87,11 @@ type VarSpec struct {
     Type      Type     `@@`
 }
 
-type LetSpec struct {
-    IdentList []string `@Ident ( "," @Ident )*`
-    Type      Type     `@@`
-    Reducer   string   `":" Ident`
+type AssignStmt struct {
+    Pos lexer.Position
+
+    Ref   Reference `@@`
+    Value Expr      `"=" @@`
 }
 
 type Type struct {
@@ -238,6 +240,7 @@ func (IfBranch) node()         {}
 func (ForStmt) node()          {}
 func (EOLStmt) node()          {}
 func (EOFStmt) node()          {}
+func (AssignStmt) node()       {}
 func (VarSpec) node()          {}
 func (Type) node()             {}
 func (TypeLit) node()          {}

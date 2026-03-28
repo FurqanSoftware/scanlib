@@ -88,6 +88,10 @@ func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
 	case *ast.ForStmt:
 		g.forStmt(n)
 		return nil
+
+	case *ast.AssignStmt:
+		g.assignStmt(n)
+		return nil
 	}
 
 	panic(fmt.Errorf("unreachable, with %T", n))
@@ -131,6 +135,25 @@ func (g *Generator) varDecl(n *ast.VarDecl) error {
 		g.ctx.cw.Printf("]%s", t)
 		g.ctx.cw.Println()
 	}
+	return nil
+}
+
+func (g *Generator) assignStmt(n *ast.AssignStmt) error {
+	g.ctx.cw.Printf("%s", n.Ref.Ident)
+	for _, i := range n.Ref.Indices {
+		g.ctx.cw.Print("[")
+		err := genExpr(g.ctx, &i)
+		if err != nil {
+			return err
+		}
+		g.ctx.cw.Print("]")
+	}
+	g.ctx.cw.Print(" = ")
+	err := genExpr(g.ctx, &n.Value)
+	if err != nil {
+		return err
+	}
+	g.ctx.cw.Println()
 	return nil
 }
 
