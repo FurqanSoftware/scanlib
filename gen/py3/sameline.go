@@ -34,6 +34,12 @@ func (a *analyzer) sameLine(n *ast.Block) {
 		return
 	}
 
+	for _, s := range n.Statements {
+		if s.AssignStmt != nil {
+			return
+		}
+	}
+
 	ast.Inspect(n, func(n ast.Node) bool {
 		switch n := n.(type) {
 		case *ast.Block, *ast.Statement:

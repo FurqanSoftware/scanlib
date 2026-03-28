@@ -89,6 +89,17 @@ func (g *Generator) varDecl(n *ast.VarDecl) error {
 		for _, x := range n.VarSpec.IdentList {
 			g.ctx.types[x] = t
 		}
+		oz, ok := g.analyzer.ozs[n]
+		if ok {
+			return oz.Generate(g.ctx)
+		}
+		for _, x := range n.VarSpec.IdentList {
+			if g.analyzer.scanned[x] {
+				continue
+			}
+			g.ctx.cw.Printf("%s = %s", x, ASTZero[t])
+			g.ctx.cw.Println()
+		}
 
 	case n.VarSpec.Type.TypeLit != nil:
 		t := ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName]
