@@ -1,6 +1,6 @@
 # Scanlib
 
-Use Scanspec Validate input files and generate input code in different programming languages.
+Use Scanspec to validate input files and generate input parsing code in Go, C++14, and Python 3.
 
 ## Scanspec
 
@@ -22,6 +22,18 @@ eol
 eof
 ```
 
+``` go
+package main
+
+import "fmt"
+
+func main() {
+	var A, B int
+	fmt.Scan(&A, &B)
+
+}
+```
+
 ``` cpp
 // Generated using Scanlib
 
@@ -33,7 +45,7 @@ int main() {
 	int A, B;
 	cin >> A;
 	cin >> B;
-	
+
 	return 0;
 }
 ```
@@ -111,7 +123,7 @@ A comment begins with the # character, and ends at the end of the line. A commen
 #### Keywords
 
 ```
-check eof eol for scan var
+check else end eof eol for if let scan scanln var
 ```
 
 #### Types
@@ -151,6 +163,13 @@ scan e, f, n
 scan G[2]
 ```
 
+#### Scanln Statements
+
+```
+scanln S
+scanln A, B
+```
+
 #### If Statements
 
 ```
@@ -162,6 +181,23 @@ else if q == 3
 	scan l, h
 else
 	scan G[q]
+end
+```
+
+#### Let Statements
+
+```
+let s int :sum
+```
+
+Let statements declare accumulator variables with a reducer. Values are fed into the accumulator using `<-`:
+
+```
+let s int :sum
+for i := 0 ... N
+	var A int
+	scan A
+	s <- A
 end
 ```
 
@@ -197,7 +233,7 @@ The following indicates end of line.
 ```
 eol
 ```
-#### EOL Statements
+#### EOF Statements
 
 The following indicates end of file.
 
@@ -211,6 +247,7 @@ eof
 len(a): Returns the length of array a.
 re(s, x): Returns true if string s matches regular expression x.
 pow(n, e): Returns n raised to the power of e. Result is int or int64 if both n and e are int or int64, otherwise float64.
+sum(a...): Returns the sum of the arguments. Accepts int, int64, and []int values.
 toInt64(s, b=10): Parses string s in base b and returns in int64.
 ```
 
