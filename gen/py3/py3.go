@@ -389,7 +389,15 @@ func genOpAddition(ctx *Context, n *ast.OpAddition) error {
 }
 
 func genMultiplication(ctx *Context, n *ast.Multiplication) error {
-	return genUnary(ctx, n.Unary)
+	err := genUnary(ctx, n.Unary)
+	if err != nil {
+		return err
+	}
+	if n.Exponent != nil {
+		ctx.cw.Print("**")
+		return genPrimary(ctx, n.Exponent)
+	}
+	return nil
 }
 
 func genOpMultiplication(ctx *Context, n *ast.OpMultiplication) error {

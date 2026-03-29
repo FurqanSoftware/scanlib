@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"reflect"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
@@ -675,7 +676,44 @@ func (e *evaluator) opAddition(n *ast.OpAddition, l interface{}) (interface{}, e
 }
 
 func (e *evaluator) multiplication(n *ast.Multiplication) (interface{}, error) {
-	return e.unary(n.Unary)
+	v, err := e.unary(n.Unary)
+	if err != nil {
+		return nil, err
+	}
+	if n.Exponent == nil {
+		return v, nil
+	}
+	exp, err := e.primary(n.Exponent)
+	if err != nil {
+		return nil, err
+	}
+	switch v := v.(type) {
+	case int:
+		ei, ok := toInt(exp)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		if ei >= 0 {
+			return powInt(v, ei), nil
+		}
+	case int64:
+		ei, ok := toInt64(exp)
+		if !ok {
+			return nil, ErrInvalidOperation{}
+		}
+		if ei >= 0 {
+			return powInt64(v, ei), nil
+		}
+	}
+	vf, ok := toFloat64(v)
+	if !ok {
+		return nil, ErrInvalidOperation{}
+	}
+	ef, ok := toFloat64(exp)
+	if !ok {
+		return nil, ErrInvalidOperation{}
+	}
+	return math.Pow(vf, ef), nil
 }
 
 func (e *evaluator) opMultiplication(n *ast.OpMultiplication, l interface{}) (interface{}, error) {

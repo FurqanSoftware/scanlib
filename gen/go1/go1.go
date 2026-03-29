@@ -390,6 +390,21 @@ func genOpAddition(ctx *Context, n *ast.OpAddition) error {
 }
 
 func genMultiplication(ctx *Context, n *ast.Multiplication) error {
+	if n.Exponent != nil {
+		ctx.imports["math"] = true
+		ctx.cw.Print("math.Pow(float64(")
+		err := genUnary(ctx, n.Unary)
+		if err != nil {
+			return err
+		}
+		ctx.cw.Print("), float64(")
+		err = genPrimary(ctx, n.Exponent)
+		if err != nil {
+			return err
+		}
+		ctx.cw.Print("))")
+		return nil
+	}
 	return genUnary(ctx, n.Unary)
 }
 

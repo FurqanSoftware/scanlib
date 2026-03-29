@@ -175,7 +175,7 @@ type OpAddition struct {
 
 type Multiplication struct {
     Unary    *Unary   `@@`
-    Exponent *Primary `( "^" @@ )?`
+    Exponent *Primary `( "*" "*" @@ )?`
 }
 
 type OpMultiplication struct {

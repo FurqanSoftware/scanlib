@@ -365,6 +365,21 @@ func genOpAddition(ctx *Context, n *ast.OpAddition) error {
 }
 
 func genMultiplication(ctx *Context, n *ast.Multiplication) error {
+	if n.Exponent != nil {
+		ctx.includes["math.h"] = true
+		ctx.cw.Print("pow(")
+		err := genUnary(ctx, n.Unary)
+		if err != nil {
+			return err
+		}
+		ctx.cw.Print(", ")
+		err = genPrimary(ctx, n.Exponent)
+		if err != nil {
+			return err
+		}
+		ctx.cw.Print(")")
+		return nil
+	}
 	return genUnary(ctx, n.Unary)
 }
 

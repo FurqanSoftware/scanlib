@@ -1,0 +1,8 @@
+var A, B int
+scan A, B
+check A >= 1, A <= 10
+check A ** B < 1000000000
+eol
+var s int
+s = A ** B
+eof
