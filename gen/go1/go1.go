@@ -439,20 +439,15 @@ func genPrimary(ctx *Context, n *ast.Primary) error {
 		// return Functions[n.Call.Name](args...)
 
 	case n.Variable != nil:
-		// indices := []int{}
-		// for _, i := range n.Variable.Indices {
-		// 	v, err := genExpr(ctx, &i)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// 	vi, ok := v.(int)
-		// 	if !ok {
-		// 		return nil, ErrNonIntegerIndex{}
-		// 	}
-		// 	indices = append(indices, vi)
-		// }
-		// return ctx.GetValue(n.Variable.Identifier, indices).Data, nil
 		ctx.cw.Print(n.Variable.Ident)
+		for _, i := range n.Variable.Indices {
+			ctx.cw.Print("[")
+			err := genExpr(ctx, &i)
+			if err != nil {
+				return err
+			}
+			ctx.cw.Print("]")
+		}
 		return nil
 
 	case n.BasicLit != nil:

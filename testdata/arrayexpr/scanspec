@@ -1,0 +1,12 @@
+var N int
+scan N
+check N >= 1, N <= 100
+eol
+var A [N]int
+var s int
+for i := 0 ... N
+	scan A[i]
+	s = s + A[i]
+	eol
+end
+eof

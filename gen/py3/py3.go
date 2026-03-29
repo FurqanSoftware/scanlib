@@ -423,6 +423,14 @@ func genPrimary(ctx *Context, n *ast.Primary) error {
 
 	case n.Variable != nil:
 		ctx.cw.Print(n.Variable.Ident)
+		for _, i := range n.Variable.Indices {
+			ctx.cw.Print("[")
+			err := genExpr(ctx, &i)
+			if err != nil {
+				return err
+			}
+			ctx.cw.Print("]")
+		}
 		return nil
 
 	case n.BasicLit != nil:
