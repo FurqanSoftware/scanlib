@@ -1,0 +1,422 @@
+// Copyright 2020 Furqan Software Ltd. All rights reserved.
+
+package c
+
+import (
+	"bytes"
+	"fmt"
+	"sort"
+	"strings"
+
+	"git.furqansoftware.net/toph/scanlib/ast"
+	"git.furqansoftware.net/toph/scanlib/gen"
+	"git.furqansoftware.net/toph/scanlib/gen/code"
+)
+
+type Generator struct {
+	ctx *Context
+	err error
+}
+
+func Generate(n *ast.Source) ([]byte, error) {
+	ctx := Context{
+		types:    map[string]string{},
+		includes: map[string]bool{},
+		cw:       code.NewWriter("\t"),
+	}
+	ctx.includes["stdio.h"] = true
+
+	g := Generator{
+		ctx: &ctx,
+	}
+
+	ctx.cw.Indent(1)
+	ast.Walk(&g, n)
+	ctx.cw.Indent(-1)
+
+	if g.err != nil {
+		return nil, g.err
+	}
+
+	r := bytes.Buffer{}
+	includes := []string{}
+	for k := range ctx.includes {
+		includes = append(includes, k)
+	}
+	sort.Strings(includes)
+	for _, inc := range includes {
+		r.WriteString("#include <" + inc + ">\n")
+	}
+	r.WriteString("\n")
+	r.WriteString("int main() {\n")
+	r.Write(ctx.cw.Bytes())
+	r.WriteString("\t\n")
+	r.WriteString("\treturn 0;\n")
+	r.WriteString("}\n")
+
+	return r.Bytes(), nil
+}
+
+func (g *Generator) Visit(n ast.Node) (w ast.Visitor) {
+	if n == nil || g.err != nil {
+		return nil
+	}
+
+	switch n := n.(type) {
+	case *ast.Source, *ast.Block, *ast.Statement:
+		return g
+
+	case *ast.CheckStmt, *ast.EOLStmt, *ast.EOFStmt:
+		return nil
+
+	case *ast.VarDecl:
+		g.err = g.varDecl(n)
+		return nil
+
+	case *ast.ScanStmt:
+		g.err = g.scanStmt(n, false)
+		return nil
+
+	case *ast.ScanlnStmt:
+		g.err = fmt.Errorf("%w: string", gen.ErrUnsupportedType)
+		return nil
+
+	case *ast.IfStmt:
+		g.err = g.ifStmt(n)
+		return nil
+
+	case *ast.ForStmt:
+		g.err = g.forStmt(n)
+		return nil
+
+	case *ast.AssignStmt:
+		g.err = g.assignStmt(n)
+		return nil
+	}
+
+	panic(fmt.Errorf("unreachable, with %T", n))
+}
+
+func (g *Generator) varDecl(n *ast.VarDecl) error {
+	switch {
+	case n.VarSpec.Type.TypeName != nil:
+		t, ok := ASTType[*n.VarSpec.Type.TypeName]
+		if !ok {
+			return fmt.Errorf("%w: %s", gen.ErrUnsupportedType, *n.VarSpec.Type.TypeName)
+		}
+
+		g.ctx.cw.Print(t)
+		for i, x := range n.VarSpec.IdentList {
+			g.ctx.types[x] = t
+
+			if i > 0 {
+				g.ctx.cw.Print(",")
+			}
+			g.ctx.cw.Printf(" %s", x)
+		}
+		g.ctx.cw.Println(";")
+
+	case n.VarSpec.Type.TypeLit != nil:
+		t, ok := ASTType[*n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName]
+		if !ok {
+			return fmt.Errorf("%w: %s", gen.ErrUnsupportedType, *n.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName)
+		}
+
+		g.ctx.cw.Print(t)
+		for i, x := range n.VarSpec.IdentList {
+			g.ctx.types[x] = "array"
+			g.ctx.types[x+"[]"] = t
+
+			if i > 0 {
+				g.ctx.cw.Print(",")
+			}
+			g.ctx.cw.Printf(" %s[", x)
+			err := genExpr(g.ctx, &n.VarSpec.Type.TypeLit.ArrayType.ArrayLength)
+			if err != nil {
+				return err
+			}
+			g.ctx.cw.Print("]")
+		}
+		g.ctx.cw.Println(";")
+	}
+	return nil
+}
+
+func (g *Generator) refType(f ast.Reference) string {
+	t := g.ctx.types[f.Ident]
+	if t == "array" {
+		t = g.ctx.types[f.Ident+"[]"]
+	}
+	return t
+}
+
+func (g *Generator) assignStmt(n *ast.AssignStmt) error {
+	g.ctx.cw.Printf("%s", n.Ref.Ident)
+	for _, i := range n.Ref.Indices {
+		g.ctx.cw.Print("[")
+		err := genExpr(g.ctx, &i)
+		if err != nil {
+			return err
+		}
+		g.ctx.cw.Print("]")
+	}
+	g.ctx.cw.Print(" = ")
+	err := genExpr(g.ctx, &n.Value)
+	if err != nil {
+		return err
+	}
+	g.ctx.cw.Println(";")
+	return nil
+}
+
+func (g *Generator) scanStmt(n *ast.ScanStmt, asexpr bool) error {
+	formats := []string{}
+	for _, f := range n.RefList {
+		t := g.refType(f)
+		formats = append(formats, ScanFormat[t])
+	}
+
+	g.ctx.cw.Print(`scanf("`)
+	g.ctx.cw.Print(strings.Join(formats, " "))
+	g.ctx.cw.Print(`"`)
+
+	for _, f := range n.RefList {
+		g.ctx.cw.Print(", &")
+		g.ctx.cw.Print(f.Ident)
+		for _, i := range f.Indices {
+			g.ctx.cw.Print("[")
+			err := genExpr(g.ctx, &i)
+			if err != nil {
+				return err
+			}
+			g.ctx.cw.Print("]")
+		}
+	}
+
+	g.ctx.cw.Print(")")
+	if asexpr {
+		g.ctx.cw.Printf(" == %d", len(n.RefList))
+	} else {
+		g.ctx.cw.Print(";")
+		g.ctx.cw.Println()
+	}
+	return nil
+}
+
+func (g *Generator) ifStmt(n *ast.IfStmt) error {
+	for i, n := range n.Branches {
+		if i > 0 {
+			g.ctx.cw.Print(" else ")
+		}
+		if n.Condition != nil {
+			g.ctx.cw.Print("if (")
+			err := genExpr(g.ctx, n.Condition)
+			if err != nil {
+				return err
+			}
+			g.ctx.cw.Print(") {")
+		} else {
+			g.ctx.cw.Print("{")
+		}
+		g.ctx.cw.Println()
+		g.ctx.cw.Indent(1)
+		ast.Walk(g, &n.Block)
+		g.ctx.cw.Indent(-1)
+		g.ctx.cw.Print("}")
+	}
+	g.ctx.cw.Println()
+	return nil
+}
+
+func (g *Generator) forStmt(n *ast.ForStmt) error {
+	switch {
+	case n.Range != nil:
+		return g.forRangeStmt(n)
+	case n.Scan != nil:
+		return g.forScanStmt(n)
+	case n.Scanln != nil:
+		return fmt.Errorf("%w: string", gen.ErrUnsupportedType)
+	}
+	panic("unreachable")
+}
+
+func (g *Generator) forRangeStmt(n *ast.ForStmt) error {
+	g.ctx.cw.Printf("for (int %s = ", n.Range.Index)
+	err := genExpr(g.ctx, &n.Range.Low)
+	if err != nil {
+		return err
+	}
+	g.ctx.cw.Printf("; %s < ", n.Range.Index)
+	err = genExpr(g.ctx, &n.Range.High)
+	if err != nil {
+		return err
+	}
+	g.ctx.cw.Printf("; ++%s) {", n.Range.Index)
+	g.ctx.cw.Println()
+	g.ctx.cw.Indent(1)
+	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
+	g.ctx.cw.Print("}")
+	g.ctx.cw.Println()
+	return nil
+}
+
+func (g *Generator) forScanStmt(n *ast.ForStmt) error {
+	g.ctx.cw.Print("while (")
+	g.scanStmt(n.Scan, true)
+	g.ctx.cw.Print(") {")
+	g.ctx.cw.Println()
+	g.ctx.cw.Indent(1)
+	ast.Walk(g, &n.Block)
+	g.ctx.cw.Indent(-1)
+	g.ctx.cw.Print("}")
+	g.ctx.cw.Println()
+	return nil
+}
+
+func genExpr(ctx *Context, n *ast.Expr) error {
+	err := genLogicalOr(ctx, n.Left)
+	if err != nil {
+		return err
+	}
+	for _, c := range n.Right {
+		err := genOpLogicalOr(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func genLogicalOr(ctx *Context, n *ast.LogicalOr) error {
+	err := genLogicalAnd(ctx, n.Left)
+	if err != nil {
+		return err
+	}
+	for _, c := range n.Right {
+		err := genOpLogicalAnd(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func genOpLogicalOr(ctx *Context, n *ast.OpLogicalOr) error {
+	ctx.cw.Print("||")
+	return genLogicalOr(ctx, n.LogicalOr)
+}
+
+func genLogicalAnd(ctx *Context, n *ast.LogicalAnd) error {
+	err := genRelative(ctx, n.Left)
+	if err != nil {
+		return err
+	}
+	for _, c := range n.Right {
+		err := genOpRelative(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func genOpLogicalAnd(ctx *Context, n *ast.OpLogicalAnd) error {
+	ctx.cw.Print("&&")
+	return genLogicalAnd(ctx, n.LogicalAnd)
+}
+
+func genRelative(ctx *Context, n *ast.Relative) error {
+	err := genAddition(ctx, n.Left)
+	if err != nil {
+		return err
+	}
+	for _, c := range n.Right {
+		err := genOpAddition(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func genOpRelative(ctx *Context, n *ast.OpRelative) error {
+	ctx.cw.Print(string(n.Operator))
+	return genRelative(ctx, n.Relative)
+}
+
+func genAddition(ctx *Context, n *ast.Addition) error {
+	err := genMultiplication(ctx, n.Left)
+	if err != nil {
+		return err
+	}
+	for _, c := range n.Right {
+		err := genOpMultiplication(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func genOpAddition(ctx *Context, n *ast.OpAddition) error {
+	ctx.cw.Print(string(n.Operator))
+	return genAddition(ctx, n.Addition)
+}
+
+func genMultiplication(ctx *Context, n *ast.Multiplication) error {
+	return genUnary(ctx, n.Unary)
+}
+
+func genOpMultiplication(ctx *Context, n *ast.OpMultiplication) error {
+	ctx.cw.Print(string(n.Operator))
+	return genMultiplication(ctx, n.Factor)
+}
+
+func genUnary(ctx *Context, n *ast.Unary) error {
+	switch {
+	case n.Value != nil:
+		return genPrimary(ctx, n.Value)
+
+	case n.Negated != nil:
+		ctx.cw.Print("-")
+		return genPrimary(ctx, n.Negated)
+	}
+	panic("unreachable")
+}
+
+func genPrimary(ctx *Context, n *ast.Primary) error {
+	switch {
+	case n.CallExpr != nil:
+		// Not supported in code generation
+
+	case n.Variable != nil:
+		ctx.cw.Print(n.Variable.Ident)
+		return nil
+
+	case n.BasicLit != nil:
+		return genBasicLit(ctx, n.BasicLit)
+
+	case n.SubExpr != nil:
+		return genExpr(ctx, n.SubExpr)
+	}
+	panic("unreachable")
+}
+
+func genBasicLit(ctx *Context, n *ast.BasicLit) error {
+	switch {
+	case n.FloatLit != nil:
+		ctx.cw.Printf("%f", *n.FloatLit)
+		return nil
+
+	case n.IntLit != nil:
+		ctx.cw.Printf("%d", *n.IntLit)
+		return nil
+
+	case n.StringLit != nil:
+		ctx.cw.Printf("%q", *n.StringLit)
+		return nil
+	}
+
+	panic("unreachable")
+}
