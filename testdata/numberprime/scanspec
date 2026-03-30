@@ -1,0 +1,6 @@
+var N int
+scan N
+check N >= 1
+check numbers.prime(N)
+eol
+eof

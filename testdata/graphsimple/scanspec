@@ -11,6 +11,6 @@ for i := 0 ... M
 	check V[i] >= 1, V[i] <= N
 	eol
 end
-check graph.simple(N, U, V)
-check graph.connected(N, U, V)
+check graphs.simple(N, U, V)
+check graphs.connected(N, U, V)
 eof

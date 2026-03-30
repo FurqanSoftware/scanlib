@@ -1,0 +1,11 @@
+var A, B, G int
+scan A, B, G
+check A >= 1, B >= 1
+check numbers.gcd(A, B) == G
+eol
+var P, Q int
+scan P, Q
+check P >= 1, Q >= 1
+check numbers.coprime(P, Q)
+eol
+eof

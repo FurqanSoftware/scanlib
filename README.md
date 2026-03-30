@@ -257,15 +257,15 @@ toInt64(s, b=10): Parses string s in base b and returns in int64.
 
 Built-in modules provide additional functions to make validation of input data easier.
 
-##### graph
+##### graphs
 
 Graph check functions take node count N (1-indexed) and two parallel edge arrays U and V.
 
 ```
-graph.simple(N, U, V): Returns true if the graph has no self-loops or duplicate edges.
-graph.connected(N, U, V): Returns true if all N nodes are connected.
-graph.acyclic(N, U, V): Returns true if the graph has no cycles.
-graph.tree(N, U, V): Returns true if the edges form a tree on N nodes.
+graphs.simple(N, U, V): Returns true if the graph has no self-loops or duplicate edges.
+graphs.connected(N, U, V): Returns true if all N nodes are connected.
+graphs.acyclic(N, U, V): Returns true if the graph has no cycles.
+graphs.tree(N, U, V): Returns true if the edges form a tree on N nodes.
 ```
 
 Example:
@@ -283,8 +283,19 @@ for i := 0 ... N-1
 	check V[i] >= 1, V[i] <= N
 	eol
 end
-check graph.tree(N, U, V)
+check graphs.tree(N, U, V)
 eof
+```
+
+##### numbers
+
+Number theory functions for validating numeric properties.
+
+```
+numbers.prime(n): Returns true if n is a prime numbers.
+numbers.gcd(a, b): Returns the greatest common divisor of a and b.
+numbers.lcm(a, b): Returns the least common multiple of a and b.
+numbers.coprime(a, b): Returns true if a and b are coprime.
 ```
 
 ## CLI

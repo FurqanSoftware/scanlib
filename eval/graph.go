@@ -1,10 +1,10 @@
 package eval
 
 func init() {
-	Functions["graph.simple"] = graphSimple
-	Functions["graph.connected"] = graphConnected
-	Functions["graph.acyclic"] = graphAcyclic
-	Functions["graph.tree"] = graphTree
+	Functions["graphs.simple"] = graphSimple
+	Functions["graphs.connected"] = graphConnected
+	Functions["graphs.acyclic"] = graphAcyclic
+	Functions["graphs.tree"] = graphTree
 }
 
 func graphArgs(args []interface{}) (n int, u, v []int, err error) {
