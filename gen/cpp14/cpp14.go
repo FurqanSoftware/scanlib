@@ -415,7 +415,7 @@ func genUnary(ctx *Context, n *ast.Unary) error {
 func genPrimary(ctx *Context, n *ast.Primary) error {
 	switch {
 	case n.ModuleCallExpr != nil:
-		return fmt.Errorf("%w: %s.%s", gen.ErrUnsupportedFunction, n.ModuleCallExpr.Module, n.ModuleCallExpr.Ident)
+		return genModuleCallExpr(ctx, n.ModuleCallExpr)
 
 	case n.CallExpr != nil:
 		return fmt.Errorf("%w: %s", gen.ErrUnsupportedFunction, n.CallExpr.Ident)
@@ -457,4 +457,34 @@ func genBasicLit(ctx *Context, n *ast.BasicLit) error {
 	}
 
 	panic("unreachable")
+}
+
+var moduleCallExprs = map[string]struct {
+	name    string
+	include string
+}{
+	"math.min": {"min", "algorithm"},
+	"math.max": {"max", "algorithm"},
+}
+
+func genModuleCallExpr(ctx *Context, n *ast.ModuleCallExpr) error {
+	key := n.Module + "." + n.Ident
+	info, ok := moduleCallExprs[key]
+	if !ok {
+		return fmt.Errorf("%w: %s", gen.ErrUnsupportedFunction, key)
+	}
+	if info.include != "" {
+		ctx.includes[info.include] = true
+	}
+	ctx.cw.Print(info.name + "(")
+	for i := range n.Args {
+		if i > 0 {
+			ctx.cw.Print(", ")
+		}
+		if err := genExpr(ctx, &n.Args[i]); err != nil {
+			return err
+		}
+	}
+	ctx.cw.Print(")")
+	return nil
 }

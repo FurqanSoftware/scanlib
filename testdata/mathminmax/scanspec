@@ -1,0 +1,9 @@
+var A, B int
+scan A, B
+eol
+var lo int
+var hi int
+lo = math.min(A, B)
+hi = math.max(A, B)
+check lo <= hi
+eof
