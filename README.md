@@ -254,6 +254,17 @@ toInt64(s, b=10): Parses string s in base b and returns in int64.
 
 Built-in modules provide additional functions to make validation of input data easier.
 
+##### arrays
+
+Array validation functions.
+
+```
+arrays.sorted(A): Returns true if the array is sorted in non-decreasing order.
+arrays.distinct(A): Returns true if all elements in the array are unique.
+arrays.permutation(N, A): Returns true if A is a permutation of 1..N.
+arrays.range(A, lo, hi): Returns true if all elements are in [lo, hi].
+```
+
 ##### math
 
 Mathematical functions.
@@ -336,6 +347,14 @@ Regular expression functions.
 regexp.match(s, pattern): Returns true if s matches the pattern.
 regexp.fullmatch(s, pattern): Returns true if the entire string s matches the pattern.
 regexp.count(s, pattern): Returns the number of non-overlapping matches of pattern in s.
+```
+
+##### matrices
+
+Matrix/grid validation functions.
+
+```
+matrices.dimensions(G, R, C): Returns true if string array G has R elements, each of length C.
 ```
 
 ## CLI

@@ -1,0 +1,1 @@
+11:1~4:1: check error arrays.sorted(A) (A=[]int{3, 1, 2})
