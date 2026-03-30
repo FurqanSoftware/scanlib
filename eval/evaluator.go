@@ -1,3 +1,5 @@
+// Package eval evaluates a Scanspec AST against input data, scanning values
+// and validating constraints.
 package eval
 
 import (
@@ -17,6 +19,8 @@ type evaluator struct {
 	Values Values
 }
 
+// Evaluate executes a Scanspec AST against the provided input, returning the
+// scanned values or an error if a constraint check fails or parsing fails.
 func Evaluate(source *ast.Source, input io.Reader, options ...Option) (values Values, err error) {
 	e := evaluator{
 		Source: source,

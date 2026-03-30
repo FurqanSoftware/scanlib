@@ -2,10 +2,14 @@ package ast
 
 import "fmt"
 
+// Visitor defines the interface for AST visitors. If Visit returns a
+// non-nil Visitor, Walk recurses into the node's children with that visitor.
 type Visitor interface {
     Visit(Node) Visitor
 }
 
+// Walk traverses an AST in depth-first order. It calls v.Visit(n), and if that
+// returns a non-nil visitor, it recursively walks each child of n.
 func Walk(v Visitor, n Node) {
     v = v.Visit(n)
     if v == nil {
@@ -198,6 +202,8 @@ func (f inspector) Visit(node Node) Visitor {
     return nil
 }
 
+// Inspect traverses an AST, calling f for each node. If f returns false,
+// Inspect does not recurse into the node's children.
 func Inspect(node Node, f func(Node) bool) {
     Walk(inspector(f), node)
 }

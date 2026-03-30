@@ -1,5 +1,6 @@
 // Copyright 2020 Furqan Software Ltd. All rights reserved.
 
+// Package code provides utilities for code generation.
 package code
 
 import (
@@ -8,6 +9,7 @@ import (
 	"strings"
 )
 
+// Writer is an indentation-aware code writer.
 type Writer struct {
 	buf *bytes.Buffer
 
@@ -17,6 +19,8 @@ type Writer struct {
 	r, c int
 }
 
+// NewWriter returns a new Writer that uses the given string for each
+// indentation level.
 func NewWriter(indent string) *Writer {
 	return &Writer{
 		buf:    &bytes.Buffer{},

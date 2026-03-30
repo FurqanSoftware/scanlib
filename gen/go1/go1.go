@@ -1,5 +1,6 @@
 // Copyright 2020 Furqan Software Ltd. All rights reserved.
 
+// Package go1 generates Go source code from a Scanspec AST.
 package go1
 
 import (
@@ -11,10 +12,12 @@ import (
 	"git.furqansoftware.net/toph/scanlib/gen/code"
 )
 
+// Generator walks a Scanspec AST and emits Go source code.
 type Generator struct {
 	ctx *Context
 }
 
+// Generate generates Go source code from a Scanspec AST.
 func Generate(n *ast.Source) ([]byte, error) {
 	ctx := Context{
 		types:   map[string]string{},

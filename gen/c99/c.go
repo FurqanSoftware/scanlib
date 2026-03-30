@@ -1,5 +1,6 @@
 // Copyright 2020 Furqan Software Ltd. All rights reserved.
 
+// Package c99 generates C99 source code from a Scanspec AST.
 package c99
 
 import (
@@ -13,11 +14,14 @@ import (
 	"git.furqansoftware.net/toph/scanlib/gen/code"
 )
 
+// Generator walks a Scanspec AST and emits C99 source code.
 type Generator struct {
 	ctx *Context
 	err error
 }
 
+// Generate generates C99 source code from a Scanspec AST. It returns
+// [gen.ErrUnsupportedType] if the Scanspec uses the string type.
 func Generate(n *ast.Source) ([]byte, error) {
 	ctx := Context{
 		types:    map[string]string{},

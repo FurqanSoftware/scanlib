@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Functions maps built-in function names to their implementations.
 var Functions = map[string]func(args ...interface{}) (interface{}, error){
 	"len": func(args ...interface{}) (interface{}, error) {
 		s, ok := args[0].(string)

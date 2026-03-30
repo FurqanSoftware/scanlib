@@ -1,5 +1,6 @@
 // Copyright 2020 Furqan Software Ltd. All rights reserved.
 
+// Package py3 generates Python 3 source code from a Scanspec AST.
 package py3
 
 import (
@@ -11,11 +12,13 @@ import (
 	"git.furqansoftware.net/toph/scanlib/gen/code"
 )
 
+// Generator walks a Scanspec AST and emits Python 3 source code.
 type Generator struct {
 	ctx      *Context
 	analyzer *analyzer
 }
 
+// Generate generates Python 3 source code from a Scanspec AST.
 func Generate(n *ast.Source) ([]byte, error) {
 	ctx := Context{
 		types: map[string]string{},

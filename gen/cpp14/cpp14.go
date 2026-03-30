@@ -1,5 +1,6 @@
 // Copyright 2020 Furqan Software Ltd. All rights reserved.
 
+// Package cpp14 generates C++14 source code from a Scanspec AST.
 package cpp14
 
 import (
@@ -11,10 +12,12 @@ import (
 	"git.furqansoftware.net/toph/scanlib/gen/code"
 )
 
+// Generator walks a Scanspec AST and emits C++14 source code.
 type Generator struct {
 	ctx *Context
 }
 
+// Generate generates C++14 source code from a Scanspec AST.
 func Generate(n *ast.Source) ([]byte, error) {
 	ctx := Context{
 		types:    map[string]string{},

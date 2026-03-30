@@ -1,3 +1,4 @@
+// Package ast defines the abstract syntax tree for the Scanspec language.
 package ast
 
 import (
@@ -6,10 +7,12 @@ import (
     "github.com/alecthomas/participle/v2/lexer"
 )
 
+// Node is the interface implemented by all AST nodes.
 type Node interface {
     node()
 }
 
+// Source is the root node of a Scanspec AST.
 type Source struct {
     Block Block `@@`
 }

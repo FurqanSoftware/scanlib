@@ -144,6 +144,7 @@ func (e ErrBadParse) Error() string {
 	return fmt.Sprintf("%d:%d~%d:%d: parse error: want %s, got %q", e.Pos.Line, e.Pos.Column, e.Cursor.Ln, e.Cursor.Col, e.Want, e.Got)
 }
 
+// Cursor represents a position in the input stream.
 type Cursor struct {
 	Ln, Col int
 }

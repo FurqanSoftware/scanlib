@@ -22,6 +22,7 @@ var parser = participle.MustBuild[Source](participle.Lexer(lexer.MustSimple([]le
 	participle.UseLookahead(2),
 )
 
+// ParseString parses a Scanspec source string and returns the AST.
 func ParseString(filename string, s string) (*Source, error) {
 	n, err := parser.ParseString(filename, s)
 	if err != nil {
