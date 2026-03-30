@@ -247,5 +247,4 @@ toInt64(s, b=10): Parses string s in base b and returns in int64.
 - [x] C Generator
 - [x] Go Generator
 - [ ] Graph Checks
-- [ ] CLI Tool
-- and more...
+- [x] CLI Tool
