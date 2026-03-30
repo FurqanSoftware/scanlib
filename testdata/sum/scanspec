@@ -6,6 +6,6 @@ var A [n]int
 for i := 0 ... n
 	scan A[i]
 end
-check sum(A) > 0, sum(A) < 50
+check math.sum(A) > 0, math.sum(A) < 50
 eol
 eof

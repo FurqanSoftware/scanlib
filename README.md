@@ -247,14 +247,28 @@ eof
 
 ```
 len(a): Returns the length of array a.
-pow(n, e): Returns n raised to the power of e. Result is int or int64 if both n and e are int or int64, otherwise float64.
-sum(a...): Returns the sum of the arguments. Accepts int, int64, and []int values.
 toInt64(s, b=10): Parses string s in base b and returns in int64.
 ```
 
 #### Modules
 
 Built-in modules provide additional functions to make validation of input data easier.
+
+##### math
+
+Mathematical functions.
+
+```
+math.abs(n): Returns the absolute value of n.
+math.min(a, b): Returns the minimum of a and b.
+math.max(a, b): Returns the maximum of a and b.
+math.sqrt(n): Returns the square root of n.
+math.log2(n): Returns the base-2 logarithm of n.
+math.ceil(n): Returns the smallest integer not less than n.
+math.floor(n): Returns the largest integer not greater than n.
+math.pow(n, e): Returns n raised to the power of e.
+math.sum(a...): Returns the sum of the arguments.
+```
 
 ##### graphs
 

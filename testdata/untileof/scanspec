@@ -6,7 +6,7 @@ for scan cmd
 		scan param
 	end
 	if cmd == "REPEAT"
-		check param > 0, param < pow(10, 6)
+		check param > 0, param < math.pow(10, 6)
 	end
 	eol
 end
