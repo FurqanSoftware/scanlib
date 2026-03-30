@@ -305,7 +305,7 @@ eof
 Number theory functions for validating numeric properties.
 
 ```
-numbers.prime(n): Returns true if n is a prime numbers.
+numbers.prime(n): Returns true if n is a prime number.
 numbers.gcd(a, b): Returns the greatest common divisor of a and b.
 numbers.lcm(a, b): Returns the least common multiple of a and b.
 numbers.coprime(a, b): Returns true if a and b are coprime.
