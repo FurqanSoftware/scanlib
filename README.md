@@ -80,7 +80,7 @@ var G [R]string
 for i := 0 ... R
 	scan G[i]
 	check len(G[i]) == C
-	check re(G[i], "^[*.]+$")
+	check regexp.match(G[i], "^[*.]+$")
 	eol
 end
 eof
@@ -247,7 +247,6 @@ eof
 
 ```
 len(a): Returns the length of array a.
-re(s, x): Returns true if string s matches regular expression x.
 pow(n, e): Returns n raised to the power of e. Result is int or int64 if both n and e are int or int64, otherwise float64.
 sum(a...): Returns the sum of the arguments. Accepts int, int64, and []int values.
 toInt64(s, b=10): Parses string s in base b and returns in int64.
@@ -296,6 +295,33 @@ numbers.prime(n): Returns true if n is a prime numbers.
 numbers.gcd(a, b): Returns the greatest common divisor of a and b.
 numbers.lcm(a, b): Returns the least common multiple of a and b.
 numbers.coprime(a, b): Returns true if a and b are coprime.
+```
+
+##### strings
+
+String validation functions.
+
+```
+strings.distinct(s): Returns true if all characters in s are unique.
+strings.sorted(s): Returns true if s is sorted in non-decreasing order.
+strings.palindrome(s): Returns true if s is a palindrome.
+strings.lowercase(s): Returns true if s contains only lowercase letters.
+strings.uppercase(s): Returns true if s contains only uppercase letters.
+strings.alpha(s): Returns true if s contains only letters.
+strings.digit(s): Returns true if s contains only digits.
+strings.alphanumeric(s): Returns true if s contains only letters and digits.
+strings.binary(s): Returns true if s contains only '0' and '1'.
+strings.contains(s, sub): Returns true if s contains the substring sub.
+```
+
+##### regexp
+
+Regular expression functions.
+
+```
+regexp.match(s, pattern): Returns true if s matches the pattern.
+regexp.fullmatch(s, pattern): Returns true if the entire string s matches the pattern.
+regexp.count(s, pattern): Returns the number of non-overlapping matches of pattern in s.
 ```
 
 ## CLI

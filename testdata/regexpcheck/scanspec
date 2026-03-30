@@ -1,0 +1,10 @@
+var S string
+scan S
+check regexp.fullmatch(S, "[a-z]+")
+eol
+var T string
+scan T
+check regexp.match(T, "[0-9]+")
+check regexp.count(T, "[0-9]+") == 2
+eol
+eof

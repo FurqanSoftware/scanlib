@@ -8,8 +8,8 @@ for i := 0 ... R
 	for j := 0 ... C
 		var X string
 		scan X
-		check re(X, "^(\\d+|=[A-Z]+\\d+[+-/*][A-Z]+\\d+)$")
-		if re(X, "^\\d+$")
+		check regexp.match(X, "^(\\d+|=[A-Z]+\\d+[+-/*][A-Z]+\\d+)$")
+		if regexp.match(X, "^\\d+$")
 			check toInt64(X) >= -2147483648, toInt64(X) <= 2147483647
 		end
 	end

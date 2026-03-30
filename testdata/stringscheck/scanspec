@@ -1,0 +1,10 @@
+var S string
+scan S
+check strings.lowercase(S)
+check strings.distinct(S)
+eol
+var T string
+scan T
+check strings.palindrome(T)
+eol
+eof

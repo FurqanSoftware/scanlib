@@ -6,7 +6,7 @@ var S [N]string
 for i := 0 ... N
 	scan S[i]
 	check len(S[i]) < 20
-	check re(S[i], "^ba+$")
+	check regexp.match(S[i], "^ba+$")
 	eol
 end
 eof

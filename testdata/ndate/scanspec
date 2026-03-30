@@ -6,7 +6,7 @@ eol
 for i := 0 ... N
 	var G string
 	scanln G
-    check re(G, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
+    check regexp.match(G, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
 end
 
 var Q int
@@ -17,10 +17,10 @@ eol
 for i := 0 ... Q
 	var Ql string
 	scanln Ql
-    check re(Ql, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
+    check regexp.match(Ql, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
 	var Qr string
 	scanln Qr
-    check re(Qr, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
+    check regexp.match(Qr, "^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$")
 end
 
 eof

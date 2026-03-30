@@ -6,7 +6,7 @@ var G [R]string
 for i := 0 ... R
 	scan G[i]
 	check len(G[i]) == C
-	check re(G[i], "^[*.]+$")
+	check regexp.match(G[i], "^[*.]+$")
 	eol
 end
 eof
