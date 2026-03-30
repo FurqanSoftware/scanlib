@@ -1,6 +1,6 @@
 # Scanlib
 
-Use Scanspec to validate input files and generate input parsing code in Go, C++14, and Python 3.
+Use Scanspec to validate input files and generate input parsing code in C99, C++14, Go, and Python 3.
 
 ## Scanspec
 
@@ -22,6 +22,30 @@ eol
 eof
 ```
 
+``` c
+#include <stdio.h>
+
+int main() {
+	int A, B;
+	scanf("%d %d", &A, &B);
+
+	return 0;
+}
+```
+
+``` cpp
+#include <iostream>
+
+using namespace std;
+
+int main() {
+	int A, B;
+	cin >> A >> B;
+
+	return 0;
+}
+```
+
 ``` go
 package main
 
@@ -34,25 +58,7 @@ func main() {
 }
 ```
 
-``` cpp
-// Generated using Scanlib
-
-#include <iostream>
-
-using namespace std;
-
-int main() {
-	int A, B;
-	cin >> A;
-	cin >> B;
-
-	return 0;
-}
-```
-
 ``` py
-# Generated using Scanlib
-
 A, B = map(int, input().split())
 ```
 
@@ -81,8 +87,6 @@ eof
 ```
 
 ``` cpp
-// Generated using Scanlib
-
 #include <iostream>
 #include <string>
 
@@ -90,20 +94,17 @@ using namespace std;
 
 int main() {
 	int R, C;
-	cin >> R;
-	cin >> C;
+	cin >> R >> C;
 	string G[R];
 	for (int i = 0; i < R; ++i) {
 		cin >> G[i];
 	}
-	
+
 	return 0;
 }
 ```
 
 ``` py
-# Generated using Scanlib
-
 R, C = map(int, input().split())
 G = [""] * R
 for i in range(0, R):
@@ -138,11 +139,22 @@ string
 []T
 ```
 
+#### Operators
+
+```
++  -  *  /  **
+==  !=  <  >  <=  >=
+&&  ||
+```
+
+The `**` operator performs exponentiation.
+
 #### Check Statements
 
 ```
 check n > 0, n < 1000
 check e > 0, f < 5.0
+check n ** 2 < 1000000
 ```
 
 #### Variable Declarations
@@ -241,10 +253,24 @@ sum(a...): Returns the sum of the arguments. Accepts int, int64, and []int value
 toInt64(s, b=10): Parses string s in base b and returns in int64.
 ```
 
+## CLI
+
+```
+go install git.furqansoftware.net/toph/scanlib/cmd/scanlib@latest
+```
+
+Evaluate a Scanspec file against an input file:
+
+```
+scanlib scanspec input.txt
+```
+
+Or read input from stdin:
+
+```
+echo "3 2" | scanlib scanspec
+```
+
 ## TODO
 
-- [x] If Statements
-- [x] C Generator
-- [x] Go Generator
 - [ ] Graph Checks
-- [x] CLI Tool
