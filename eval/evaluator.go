@@ -3,6 +3,7 @@
 package eval
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +18,7 @@ type evaluator struct {
 	Source *ast.Source
 	Input  *Input
 	Values Values
+	ctx    context.Context
 }
 
 // Evaluate executes a Scanspec AST against the provided input, returning the
@@ -65,6 +67,13 @@ func (e *evaluator) Visit(n ast.Node) (w ast.Visitor) {
 		return e
 
 	case *ast.Statement:
+		if e.ctx != nil {
+			select {
+			case <-e.ctx.Done():
+				catch(e.ctx.Err())
+			default:
+			}
+		}
 		return e
 
 	case *ast.VarDecl:

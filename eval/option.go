@@ -1,5 +1,7 @@
 package eval
 
+import "context"
+
 // Option configures the evaluator.
 type Option interface {
 	apply(*evaluator)
@@ -16,5 +18,14 @@ func (f optionFunc) apply(e *evaluator) {
 func ScannerBuffer(buf []byte, max int) Option {
 	return optionFunc(func(e *evaluator) {
 		e.Input.sc.Buffer(buf, max)
+	})
+}
+
+// WithContext returns an Option that sets a context for the evaluator. If the
+// context is cancelled or its deadline expires, evaluation stops and returns
+// the context's error.
+func WithContext(ctx context.Context) Option {
+	return optionFunc(func(e *evaluator) {
+		e.ctx = ctx
 	})
 }
