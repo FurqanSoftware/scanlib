@@ -196,10 +196,11 @@ type Unary struct {
 type Primary struct {
     Pos lexer.Position
 
-    BasicLit *BasicLit `  @@`
-    CallExpr *CallExpr `| @@`
-    Variable *Variable `| @@`
-    SubExpr  *Expr     `| "(" @@ ")"`
+    BasicLit       *BasicLit       `  @@`
+    ModuleCallExpr *ModuleCallExpr `| @@`
+    CallExpr       *CallExpr       `| @@`
+    Variable       *Variable       `| @@`
+    SubExpr        *Expr           `| "(" @@ ")"`
 }
 
 type BasicLit struct {
@@ -229,6 +230,12 @@ type Variable struct {
 type CallExpr struct {
     Ident string `@Ident`
     Args  []Expr `"(" ( @@ ( "," @@ )* )? ")"`
+}
+
+type ModuleCallExpr struct {
+    Module string `@Ident "."`
+    Ident  string `@Ident "("`
+    Args   []Expr `( @@ ( "," @@ )* )? ")"`
 }
 
 func (Source) node()           {}
@@ -266,3 +273,4 @@ func (BasicLit) node()         {}
 func (RangeClause) node()      {}
 func (Variable) node()         {}
 func (CallExpr) node()         {}
+func (ModuleCallExpr) node()   {}

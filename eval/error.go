@@ -2,6 +2,7 @@ package eval
 
 import (
 	"fmt"
+	"reflect"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
 	"github.com/alecthomas/participle/v2/lexer"
@@ -90,7 +91,11 @@ func (e ErrCheckError) Error() string {
 			if i > 0 {
 				msg += ", "
 			}
-			msg += fmt.Sprintf("%s=%#v", k, e.Values[k].Elem().Interface())
+			v := e.Values[k]
+			if v.Kind() == reflect.Ptr {
+				v = v.Elem()
+			}
+			msg += fmt.Sprintf("%s=%#v", k, v.Interface())
 		}
 		msg += ")"
 	}

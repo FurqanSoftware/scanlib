@@ -253,6 +253,40 @@ sum(a...): Returns the sum of the arguments. Accepts int, int64, and []int value
 toInt64(s, b=10): Parses string s in base b and returns in int64.
 ```
 
+#### Modules
+
+Built-in modules provide additional functions to make validation of input data easier.
+
+##### graph
+
+Graph check functions take node count N (1-indexed) and two parallel edge arrays U and V.
+
+```
+graph.simple(N, U, V): Returns true if the graph has no self-loops or duplicate edges.
+graph.connected(N, U, V): Returns true if all N nodes are connected.
+graph.acyclic(N, U, V): Returns true if the graph has no cycles.
+graph.tree(N, U, V): Returns true if the edges form a tree on N nodes.
+```
+
+Example:
+
+```
+var N int
+scan N
+check N >= 1, N <= 100000
+eol
+var U [N-1]int
+var V [N-1]int
+for i := 0 ... N-1
+	scan U[i], V[i]
+	check U[i] >= 1, U[i] <= N
+	check V[i] >= 1, V[i] <= N
+	eol
+end
+check graph.tree(N, U, V)
+eof
+```
+
 ## CLI
 
 ```
@@ -270,7 +304,3 @@ Or read input from stdin:
 ```
 echo "3 2" | scanlib scanspec
 ```
-
-## TODO
-
-- [ ] Graph Checks

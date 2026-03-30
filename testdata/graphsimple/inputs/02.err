@@ -1,0 +1,1 @@
+14:1~4:3: check error graph.simple(N,U,V) (N=3, U=[]int{1, 2, 1}, V=[]int{2, 3, 1})

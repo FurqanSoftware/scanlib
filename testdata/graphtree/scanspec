@@ -1,0 +1,14 @@
+var N int
+scan N
+check N >= 1, N <= 100000
+eol
+var U [N-1]int
+var V [N-1]int
+for i := 0 ... N-1
+	scan U[i], V[i]
+	check U[i] >= 1, U[i] <= N
+	check V[i] >= 1, V[i] <= N
+	eol
+end
+check graph.tree(N, U, V)
+eof

@@ -1,0 +1,16 @@
+var N, M int
+scan N, M
+check N >= 1, N <= 100000
+check M >= 0, M <= 200000
+eol
+var U [M]int
+var V [M]int
+for i := 0 ... M
+	scan U[i], V[i]
+	check U[i] >= 1, U[i] <= N
+	check V[i] >= 1, V[i] <= N
+	eol
+end
+check graph.simple(N, U, V)
+check graph.connected(N, U, V)
+eof

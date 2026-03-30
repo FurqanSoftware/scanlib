@@ -805,6 +805,18 @@ func (e *evaluator) unary(n *ast.Unary) (interface{}, error) {
 
 func (e *evaluator) primary(n *ast.Primary) (interface{}, error) {
 	switch {
+	case n.ModuleCallExpr != nil:
+		args := []interface{}{}
+		for _, a := range n.ModuleCallExpr.Args {
+			v, err := e.expr(&a)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, v)
+		}
+		key := n.ModuleCallExpr.Module + "." + n.ModuleCallExpr.Ident
+		return Functions[key](args...)
+
 	case n.CallExpr != nil:
 		args := []interface{}{}
 		for _, a := range n.CallExpr.Args {

@@ -168,6 +168,8 @@ func Walk(v Visitor, n Node) {
         switch {
         // case n.BasicLit != nil:
         //     Walk(v, n.BasicLit)
+        case n.ModuleCallExpr != nil:
+            Walk(v, n.ModuleCallExpr)
         case n.CallExpr != nil:
             Walk(v, n.CallExpr)
         case n.Variable != nil:
@@ -182,6 +184,11 @@ func Walk(v Visitor, n Node) {
         }
 
     case *CallExpr:
+        for i := range n.Args {
+            Walk(v, &n.Args[i])
+        }
+
+    case *ModuleCallExpr:
         for i := range n.Args {
             Walk(v, &n.Args[i])
         }

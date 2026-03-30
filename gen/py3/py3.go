@@ -422,6 +422,9 @@ func genUnary(ctx *Context, n *ast.Unary) error {
 
 func genPrimary(ctx *Context, n *ast.Primary) error {
 	switch {
+	case n.ModuleCallExpr != nil:
+		// Not supported in code generation
+
 	case n.CallExpr != nil:
 
 	case n.Variable != nil:
