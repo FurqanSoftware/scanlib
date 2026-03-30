@@ -1,6 +1,6 @@
 // Copyright 2020 Furqan Software Ltd. All rights reserved.
 
-package c
+package c99
 
 import "git.furqansoftware.net/toph/scanlib/gen/code"
 

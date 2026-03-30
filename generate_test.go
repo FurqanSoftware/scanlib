@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
-	"git.furqansoftware.net/toph/scanlib/gen/c"
+	"git.furqansoftware.net/toph/scanlib/gen/c99"
 	"git.furqansoftware.net/toph/scanlib/gen/cpp14"
 	"git.furqansoftware.net/toph/scanlib/gen/go1"
 	"git.furqansoftware.net/toph/scanlib/gen/py3"
@@ -22,9 +22,9 @@ type language struct {
 var (
 	langs = []language{
 		{
-			key:   "c",
+			key:   "c99",
 			ext:   ".c",
-			genFn: c.Generate,
+			genFn: c99.Generate,
 		},
 		{
 			key:   "cpp14",

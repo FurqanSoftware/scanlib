@@ -1,4 +1,4 @@
-package c
+package c99
 
 var ASTType = map[string]string{
 	"bool":    "int",
