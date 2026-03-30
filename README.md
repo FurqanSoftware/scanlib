@@ -374,3 +374,13 @@ Or read input from stdin:
 ```
 echo "3 2" | scanlib scanspec
 ```
+
+## Library Usage
+
+The evaluator supports timeout and cancellation via Go's `context.Context`:
+
+``` go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+values, err := eval.Evaluate(source, input, eval.WithContext(ctx))
+```
