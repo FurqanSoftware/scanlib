@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"git.furqansoftware.net/toph/scanlib/ast"
+	"git.furqansoftware.net/toph/scanlib/gen"
 	"git.furqansoftware.net/toph/scanlib/gen/code"
 )
 
@@ -423,9 +424,10 @@ func genUnary(ctx *Context, n *ast.Unary) error {
 func genPrimary(ctx *Context, n *ast.Primary) error {
 	switch {
 	case n.ModuleCallExpr != nil:
-		// Not supported in code generation
+		return fmt.Errorf("%w: %s.%s", gen.ErrUnsupportedFunction, n.ModuleCallExpr.Module, n.ModuleCallExpr.Ident)
 
 	case n.CallExpr != nil:
+		return fmt.Errorf("%w: %s", gen.ErrUnsupportedFunction, n.CallExpr.Ident)
 
 	case n.Variable != nil:
 		ctx.cw.Print(n.Variable.Ident)
