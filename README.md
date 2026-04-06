@@ -384,3 +384,17 @@ ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 defer cancel()
 values, err := eval.Evaluate(source, input, eval.WithContext(ctx))
 ```
+
+## Editor Support
+
+A CodeMirror 6 language definition for Scanspec syntax highlighting is available at [`contrib/codemirror/scanspec.js`](contrib/codemirror/scanspec.js).
+
+``` javascript
+import { scanspec } from "./scanspec.js"
+import { EditorView, basicSetup } from "codemirror"
+
+new EditorView({
+  extensions: [basicSetup, scanspec],
+  parent: document.getElementById("editor"),
+})
+```
