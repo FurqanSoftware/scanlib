@@ -387,14 +387,24 @@ values, err := eval.Evaluate(source, input, eval.WithContext(ctx))
 
 ## Editor Support
 
-A CodeMirror 6 language definition for Scanspec syntax highlighting is available at [`contrib/codemirror/scanspec.js`](contrib/codemirror/scanspec.js).
+A CodeMirror 6 language package for Scanspec is available at [`contrib/codemirror/`](contrib/codemirror/). It provides syntax highlighting, code folding, and autocompletion for keywords, types, built-in functions, and module functions.
+
+Build the Lezer grammar first:
+
+```
+cd contrib/codemirror
+npm install
+npm run build
+```
+
+Then use it in your editor:
 
 ``` javascript
 import { scanspec } from "./scanspec.js"
 import { EditorView, basicSetup } from "codemirror"
 
 new EditorView({
-  extensions: [basicSetup, scanspec],
+  extensions: [basicSetup, scanspec()],
   parent: document.getElementById("editor"),
 })
 ```

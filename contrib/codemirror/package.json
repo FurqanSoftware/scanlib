@@ -1,0 +1,21 @@
+{
+  "name": "@scanlib/codemirror-lang-scanspec",
+  "version": "0.1.0",
+  "description": "Scanspec language support for CodeMirror 6",
+  "type": "module",
+  "main": "scanspec.js",
+  "scripts": {
+    "build": "lezer-generator scanspec.grammar -o scanspec.grammar.js"
+  },
+  "peerDependencies": {
+    "@codemirror/autocomplete": "^6.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@lezer/highlight": "^1.0.0",
+    "@lezer/lr": "^1.0.0"
+  },
+  "devDependencies": {
+    "@lezer/generator": "~1.4.0",
+    "@lezer/lr": "~1.4.8",
+    "@lezer/common": "~1.5.2"
+  }
+}

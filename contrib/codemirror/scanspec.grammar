@@ -1,0 +1,126 @@
+@top Source { (statement | newline)* }
+
+@skip { whitespace | LineComment }
+
+statement {
+  VarDecl |
+  ScanStmt |
+  ScanlnStmt |
+  CheckStmt |
+  IfStatement |
+  ForStatement |
+  AssignStatement |
+  EolStmt |
+  EofStmt
+}
+
+VarDecl { kw<"var"> IdentList (ArrayType | TypeName) }
+IdentList { VariableName ("," VariableName)* }
+ArrayType { "[" expression "]" TypeName }
+TypeName { @specialize[@name=TypeName]<identifier, "bool" | "int" | "int64" | "float32" | "float64" | "string"> }
+
+ScanStmt { kw<"scan"> RefList }
+ScanlnStmt { kw<"scanln"> RefList }
+RefList { Reference ("," Reference)* }
+Reference { VariableName ("[" expression "]")* }
+
+CheckStmt { kw<"check"> ExprList }
+ExprList { expression ("," expression)* }
+
+EolStmt { kw<"eol"> }
+EofStmt { kw<"eof"> }
+
+AssignStatement { Reference "=" expression }
+
+IfStatement {
+  kw<"if"> expression newline (statement | newline)*
+  (kw<"else"> kw<"if"> expression newline (statement | newline)*)*
+  (kw<"else"> newline (statement | newline)*)?
+  kw<"end">
+}
+
+ForStatement {
+  kw<"for"> (RangeClause | ScanClause | ScanlnClause) newline
+  (statement | newline)*
+  kw<"end">
+}
+
+RangeClause { VariableName AssignOp expression Ellipsis expression }
+ScanClause { kw<"scan"> RefList }
+ScanlnClause { kw<"scanln"> RefList }
+
+expression {
+  BinaryExpression |
+  UnaryExpression |
+  ParenExpression |
+  ModuleCallExpression |
+  CallExpression |
+  VariableExpression |
+  Float |
+  Integer |
+  String
+}
+
+BinaryExpression {
+  expression !or Or expression |
+  expression !and And expression |
+  expression !cmp CompareOp expression |
+  expression !add ArithOp expression |
+  expression !mul MulOp expression |
+  expression !exp PowerOp expression
+}
+
+UnaryExpression { !unary "-" expression }
+
+ParenExpression { "(" expression ")" }
+
+ModuleCallExpression { VariableName "." VariableName ArgList }
+CallExpression { VariableName !call ArgList }
+ArgList { "(" (expression ("," expression)*)? ")" }
+
+VariableExpression { VariableName ("[" expression "]")* }
+
+kw<term> { @specialize[@name={term}]<identifier, term> }
+
+VariableName { identifier }
+
+@precedence {
+  call
+  unary @right
+  exp @right
+  mul @left
+  add @left
+  cmp @left
+  and @left
+  or @left
+}
+
+@tokens {
+  whitespace { $[ \t]+ }
+  newline { $[\n\r]+ }
+  LineComment { "#" ![\n]* }
+
+  Float { $[0-9]+ "." $[0-9]* }
+  Integer { $[0-9]+ }
+
+  String { '"' (![\\\n"] | "\\" _)* '"' }
+
+  identifier { $[a-zA-Z_] $[a-zA-Z0-9_]* }
+
+  CompareOp { "==" | "!=" | "<=" | ">=" | "<" | ">" }
+  ArithOp { "+" | "-" }
+  MulOp { "*" | "/" }
+  PowerOp { "**" }
+  Or { "||" }
+  And { "&&" }
+  AssignOp { ":=" }
+  Ellipsis { "..." }
+
+  @precedence { Float, Integer, "." }
+  @precedence { PowerOp, MulOp }
+  @precedence { AssignOp, "=" }
+  @precedence { Ellipsis, "." }
+  @precedence { LineComment, ArithOp }
+
+  "(" ")" "[" "]" "," "." "="
+}
