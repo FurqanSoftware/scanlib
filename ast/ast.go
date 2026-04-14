@@ -14,199 +14,199 @@ type Node interface {
 
 // Source is the root node of a Scanspec AST.
 type Source struct {
-    Block Block `@@`
+    Block Block `parser:"@@"`
 }
 
 type Block struct {
-    Statements []*Statement `EOL* ( @@ ( EOL+ @@ )* ) EOL*`
+    Statements []*Statement `parser:"EOL* ( @@ ( EOL+ @@ )* ) EOL*"`
 }
 
 type Statement struct {
     Pos lexer.Position
 
-    VarDecl    *VarDecl    `  @@`
-    ScanStmt   *ScanStmt   `| @@`
-    ScanlnStmt *ScanlnStmt `| @@`
-    CheckStmt  *CheckStmt  `| @@`
-    IfStmt     *IfStmt     `| @@`
-    ForStmt    *ForStmt    `| @@`
-    EOLStmt    *EOLStmt    `| @@`
-    EOFStmt    *EOFStmt    `| @@`
-    AssignStmt *AssignStmt `| @@`
+    VarDecl    *VarDecl    `parser:"  @@"`
+    ScanStmt   *ScanStmt   `parser:"| @@"`
+    ScanlnStmt *ScanlnStmt `parser:"| @@"`
+    CheckStmt  *CheckStmt  `parser:"| @@"`
+    IfStmt     *IfStmt     `parser:"| @@"`
+    ForStmt    *ForStmt    `parser:"| @@"`
+    EOLStmt    *EOLStmt    `parser:"| @@"`
+    EOFStmt    *EOFStmt    `parser:"| @@"`
+    AssignStmt *AssignStmt `parser:"| @@"`
 }
 
 type VarDecl struct {
-    VarSpec VarSpec `"var" @@`
+    VarSpec VarSpec `parser:"'var' @@"`
 }
 
 type ScanStmt struct {
     Pos lexer.Position
 
-    RefList []Reference `"scan" @@ ( "," @@ )*`
+    RefList []Reference `parser:"'scan' @@ ( ',' @@ )*"`
 }
 
 type ScanlnStmt struct {
     Pos lexer.Position
 
-    RefList []Reference `"scanln" @@ ( "," @@ )*`
+    RefList []Reference `parser:"'scanln' @@ ( ',' @@ )*"`
 }
 
 type CheckStmt struct {
     Pos lexer.Position
 
-    ExprList []Expr `"check" @@ ( "," @@ )*`
+    ExprList []Expr `parser:"'check' @@ ( ',' @@ )*"`
 }
 
 type IfStmt struct {
-    Branches []IfBranch `( @@ ( EOL* "else" @@ )* ) EOL* "end"`
+    Branches []IfBranch `parser:"( @@ ( EOL* 'else' @@ )* ) EOL* 'end'"`
 }
 
 type IfBranch struct {
-    Condition *Expr `( "if" @@ )? EOL+`
-    Block     Block `@@`
+    Condition *Expr `parser:"( 'if' @@ )? EOL+"`
+    Block     Block `parser:"@@"`
 }
 
 type ForStmt struct {
-    Range  *RangeClause `"for" ( @@`
-    Scan   *ScanStmt    `| @@`
-    Scanln *ScanlnStmt  `| @@ ) EOL+`
-    Block  Block        `@@ "end"`
+    Range  *RangeClause `parser:"'for' ( @@"`
+    Scan   *ScanStmt    `parser:"| @@"`
+    Scanln *ScanlnStmt  `parser:"| @@ ) EOL+"`
+    Block  Block        `parser:"@@ 'end'"`
 }
 
 type EOLStmt struct {
     Pos lexer.Position
 
-    EOL bool `@"eol"`
+    EOL bool `parser:"@'eol'"`
 }
 
 type EOFStmt struct {
     Pos lexer.Position
 
-    EOF bool `@"eof"`
+    EOF bool `parser:"@'eof'"`
 }
 
 type VarSpec struct {
-    IdentList []string `@Ident ( "," @Ident )*`
-    Type      Type     `@@`
+    IdentList []string `parser:"@Ident ( ',' @Ident )*"`
+    Type      Type     `parser:"@@"`
 }
 
 type AssignStmt struct {
     Pos lexer.Position
 
-    Ref   Reference `@@`
-    Value Expr      `"=" @@`
+    Ref   Reference `parser:"@@"`
+    Value Expr      `parser:"'=' @@"`
 }
 
 type Type struct {
-    TypeName *string  `  @Type`
-    TypeLit  *TypeLit `| @@`
+    TypeName *string  `parser:"  @Type"`
+    TypeLit  *TypeLit `parser:"| @@"`
 }
 
 type TypeLit struct {
-    ArrayType *ArrayType `@@`
+    ArrayType *ArrayType `parser:"@@"`
 }
 
 type ArrayType struct {
-    ArrayLength Expr `"[" @@ "]"`
-    ElementType Type `@@`
+    ArrayLength Expr `parser:"'[' @@ ']'"`
+    ElementType Type `parser:"@@"`
 }
 
 type Reference struct {
     Pos lexer.Position
 
-    Ident   string `@Ident`
-    Indices []Expr `( "[" @@ "]" )*`
+    Ident   string `parser:"@Ident"`
+    Indices []Expr `parser:"( '[' @@ ']' )*"`
 }
 
 type Expr struct {
     Pos    lexer.Position
     Tokens []lexer.Token
 
-    Left  *LogicalOr     `@@`
-    Right []*OpLogicalOr `@@*`
+    Left  *LogicalOr     `parser:"@@"`
+    Right []*OpLogicalOr `parser:"@@*"`
 }
 
 type LogicalOr struct {
     Pos lexer.Position
 
-    Left  *LogicalAnd     `@@`
-    Right []*OpLogicalAnd `@@*`
+    Left  *LogicalAnd     `parser:"@@"`
+    Right []*OpLogicalAnd `parser:"@@*"`
 }
 
 type OpLogicalOr struct {
     Pos lexer.Position
 
-    LogicalOr *LogicalOr `"|" "|" @@`
+    LogicalOr *LogicalOr `parser:"'|' '|' @@"`
 }
 
 type LogicalAnd struct {
     Pos lexer.Position
 
-    Left  *Relative     `@@`
-    Right []*OpRelative `@@*`
+    Left  *Relative     `parser:"@@"`
+    Right []*OpRelative `parser:"@@*"`
 }
 
 type OpLogicalAnd struct {
     Pos lexer.Position
 
-    LogicalAnd *LogicalAnd `"&" "&" @@`
+    LogicalAnd *LogicalAnd `parser:"'&' '&' @@"`
 }
 
 type Relative struct {
-    Left  *Addition     `@@`
-    Right []*OpAddition `@@*`
+    Left  *Addition     `parser:"@@"`
+    Right []*OpAddition `parser:"@@*"`
 }
 
 type OpRelative struct {
     Pos lexer.Position
 
-    Operator Operator  `@("=" "=" | "!" "=" | "<" "=" | ">" "=" | "<" | ">")`
-    Relative *Relative `@@`
+    Operator Operator  `parser:"@('=' '=' | '!' '=' | '<' '=' | '>' '=' | '<' | '>')"`
+    Relative *Relative `parser:"@@"`
 }
 
 type Addition struct {
-    Left  *Multiplication     `@@`
-    Right []*OpMultiplication `@@*`
+    Left  *Multiplication     `parser:"@@"`
+    Right []*OpMultiplication `parser:"@@*"`
 }
 
 type OpAddition struct {
     Pos lexer.Position
 
-    Operator Operator  `@("+" | "-")`
-    Addition *Addition `@@`
+    Operator Operator  `parser:"@('+' | '-')"`
+    Addition *Addition `parser:"@@"`
 }
 
 type Multiplication struct {
-    Unary    *Unary   `@@`
-    Exponent *Primary `( "*" "*" @@ )?`
+    Unary    *Unary   `parser:"@@"`
+    Exponent *Primary `parser:"( '*' '*' @@ )?"`
 }
 
 type OpMultiplication struct {
     Pos lexer.Position
 
-    Operator Operator        `@("*" | "/")`
-    Factor   *Multiplication `@@`
+    Operator Operator        `parser:"@('*' | '/')"`
+    Factor   *Multiplication `parser:"@@"`
 }
 
 type Unary struct {
-    Value   *Primary `( "+"? @@`
-    Negated *Primary `| "-" @@ )`
+    Value   *Primary `parser:"( '+'? @@"`
+    Negated *Primary `parser:"| '-' @@ )"`
 }
 
 type Primary struct {
     Pos lexer.Position
 
-    BasicLit       *BasicLit       `  @@`
-    ModuleCallExpr *ModuleCallExpr `| @@`
-    CallExpr       *CallExpr       `| @@`
-    Variable       *Variable       `| @@`
-    SubExpr        *Expr           `| "(" @@ ")"`
+    BasicLit       *BasicLit       `parser:"  @@"`
+    ModuleCallExpr *ModuleCallExpr `parser:"| @@"`
+    CallExpr       *CallExpr       `parser:"| @@"`
+    Variable       *Variable       `parser:"| @@"`
+    SubExpr        *Expr           `parser:"| '(' @@ ')'"`
 }
 
 type BasicLit struct {
-    FloatLit  *float64 `  @Float`
-    IntLit    *int64   `| @Int`
-    StringLit *string  `| @String`
+    FloatLit  *float64 `parser:"  @Float"`
+    IntLit    *int64   `parser:"| @Int"`
+    StringLit *string  `parser:"| @String"`
 }
 
 type Operator string
@@ -217,25 +217,25 @@ func (o *Operator) Capture(s []string) error {
 }
 
 type RangeClause struct {
-    Index string `@Ident ":" "="`
-    Low   Expr   `@@ "." "." "."`
-    High  Expr   `@@`
+    Index string `parser:"@Ident ':' '='"`
+    Low   Expr   `parser:"@@ '.' '.' '.'"`
+    High  Expr   `parser:"@@"`
 }
 
 type Variable struct {
-    Ident   string `@Ident`
-    Indices []Expr `( "[" @@ "]" )?`
+    Ident   string `parser:"@Ident"`
+    Indices []Expr `parser:"( '[' @@ ']' )?"`
 }
 
 type CallExpr struct {
-    Ident string `@Ident`
-    Args  []Expr `"(" ( @@ ( "," @@ )* )? ")"`
+    Ident string `parser:"@Ident"`
+    Args  []Expr `parser:"'(' ( @@ ( ',' @@ )* )? ')'"`
 }
 
 type ModuleCallExpr struct {
-    Module string `@Ident "."`
-    Ident  string `@Ident "("`
-    Args   []Expr `( @@ ( "," @@ )* )? ")"`
+    Module string `parser:"@Ident '.'"`
+    Ident  string `parser:"@Ident '('"`
+    Args   []Expr `parser:"( @@ ( ',' @@ )* )? ')'"`
 }
 
 func (Source) node()           {}
