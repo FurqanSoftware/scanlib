@@ -1,0 +1,26 @@
+var N int
+scan N
+check N >= 1, N <= 10
+eol
+var s int
+var t int64
+var f float64
+s = 0
+t = 0
+f = 0
+for i := 0 ... N
+    var A int
+    scan A
+    s = s + A
+    t = t + A
+    f = A
+end
+check s < 1000, t < 1000, f >= 0
+eol
+var X string
+scan X
+if X == "bad"
+    s = X
+end
+eol
+eof

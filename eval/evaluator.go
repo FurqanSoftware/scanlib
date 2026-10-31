@@ -46,7 +46,7 @@ func Evaluate(source *ast.Source, input io.Reader, options ...Option) (values Va
 		case error:
 			err = v
 		default:
-			panic(err)
+			panic(v)
 		}
 	}()
 
@@ -177,7 +177,36 @@ func (e *evaluator) assignStmt(n *ast.AssignStmt) error {
 	if err != nil {
 		return err
 	}
-	v.Set(reflect.ValueOf(val))
+	ok = false
+	switch v.Type() {
+	case Types["bool"]:
+		var d bool
+		d, ok = toBool(val)
+		v.SetBool(d)
+	case Types["int"]:
+		var d int
+		d, ok = toInt(val)
+		v.SetInt(int64(d))
+	case Types["int64"]:
+		var d int64
+		d, ok = toInt64(val)
+		v.SetInt(d)
+	case Types["float32"]:
+		var d float32
+		d, ok = toFloat32(val)
+		v.SetFloat(float64(d))
+	case Types["float64"]:
+		var d float64
+		d, ok = toFloat64(val)
+		v.SetFloat(d)
+	case Types["string"]:
+		var d string
+		d, ok = toString(val)
+		v.SetString(d)
+	}
+	if !ok {
+		return ErrInvalidOperation{Pos: n.Pos}
+	}
 	return nil
 }
 
