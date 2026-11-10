@@ -1,0 +1,5 @@
+var S string
+for scanln S
+	check len(S) <= 11
+end
+eof

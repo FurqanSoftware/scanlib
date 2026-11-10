@@ -99,7 +99,7 @@ func (p *Input) readString() (string, error) {
 func (p *Input) readStringLn() (string, error) {
 	b, err := p.nextLn()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	return string(b), nil
 }
@@ -158,7 +158,8 @@ func (p *Input) next() ([]byte, error) {
 }
 
 func (p *Input) nextLn() ([]byte, error) {
-	if p.err != nil {
+	p.scan()
+	if len(p.ahead) == 0 {
 		return nil, p.err
 	}
 
@@ -167,6 +168,10 @@ func (p *Input) nextLn() ([]byte, error) {
 	b := []byte{}
 	for {
 		p.scan()
+		if len(p.ahead) == 0 {
+			// Last line has no trailing newline.
+			break
+		}
 
 		t := p.ahead[0]
 		copy(p.ahead, p.ahead[1:])
