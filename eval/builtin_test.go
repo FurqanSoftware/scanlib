@@ -39,8 +39,10 @@ func TestToInt64(t *testing.T) {
 		want int64
 	}{
 		{"from int", []interface{}{42}, 42},
+		{"from int64", []interface{}{int64(42)}, 42},
 		{"from string decimal", []interface{}{"123"}, 123},
 		{"from string with base", []interface{}{"ff", 16}, 255},
+		{"from string with int64 base", []interface{}{"ff", int64(16)}, 255},
 		{"from string binary", []interface{}{"1010", 2}, 10},
 	}
 	for _, tt := range tests {

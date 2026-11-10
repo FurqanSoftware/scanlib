@@ -20,11 +20,14 @@ var Functions = map[string]func(args ...interface{}) (interface{}, error){
 		case int:
 			return int64(n), nil
 
+		case int64:
+			return n, nil
+
 		case string:
 			base := 10
 			if len(args) == 2 {
 				var ok bool
-				base, ok = args[1].(int)
+				base, ok = toInt(args[1])
 				if !ok {
 					return 0, errors.New("toInt64: base is not int")
 				}

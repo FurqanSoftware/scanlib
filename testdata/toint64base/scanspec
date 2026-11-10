@@ -1,0 +1,5 @@
+var S string
+scan S
+check toInt64(S, 16) <= 255, toInt64(5) == 5
+eol
+eof
