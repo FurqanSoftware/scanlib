@@ -21,7 +21,7 @@ func (o arrayLine) Generate(ctx *Context) error {
 		ctx.cw.Printf("%s", x.Ident)
 	}
 	t := ASTType[*o.varDecl.VarSpec.Type.TypeLit.ArrayType.ElementType.TypeName]
-	ctx.cw.Printf(" = map(%s, input().split())", t)
+	ctx.cw.Printf(" = list(map(%s, input().split()))", t)
 	ctx.cw.Println()
 	return nil
 }
