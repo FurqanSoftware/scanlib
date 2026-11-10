@@ -1,0 +1,5 @@
+var S string
+scan S
+check re(S, "a")
+eol
+eof

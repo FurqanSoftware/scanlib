@@ -1,0 +1,5 @@
+var S string
+scan S
+check strings.foo(S)
+eol
+eof

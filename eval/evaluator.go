@@ -844,6 +844,11 @@ func (e *evaluator) unary(n *ast.Unary) (interface{}, error) {
 func (e *evaluator) primary(n *ast.Primary) (interface{}, error) {
 	switch {
 	case n.ModuleCallExpr != nil:
+		key := n.ModuleCallExpr.Module + "." + n.ModuleCallExpr.Ident
+		fn, ok := Functions[key]
+		if !ok {
+			return nil, ErrUndefinedFunction{Pos: n.Pos, Name: key}
+		}
 		args := []interface{}{}
 		for _, a := range n.ModuleCallExpr.Args {
 			v, err := e.expr(&a)
@@ -852,10 +857,13 @@ func (e *evaluator) primary(n *ast.Primary) (interface{}, error) {
 			}
 			args = append(args, v)
 		}
-		key := n.ModuleCallExpr.Module + "." + n.ModuleCallExpr.Ident
-		return Functions[key](args...)
+		return fn(args...)
 
 	case n.CallExpr != nil:
+		fn, ok := Functions[n.CallExpr.Ident]
+		if !ok {
+			return nil, ErrUndefinedFunction{Pos: n.Pos, Name: n.CallExpr.Ident}
+		}
 		args := []interface{}{}
 		for _, a := range n.CallExpr.Args {
 			v, err := e.expr(&a)
@@ -864,7 +872,7 @@ func (e *evaluator) primary(n *ast.Primary) (interface{}, error) {
 			}
 			args = append(args, v)
 		}
-		return Functions[n.CallExpr.Ident](args...)
+		return fn(args...)
 
 	case n.Variable != nil:
 		v, ok := e.Values[n.Variable.Ident]

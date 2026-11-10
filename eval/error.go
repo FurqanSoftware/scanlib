@@ -17,6 +17,16 @@ func (e ErrUndefined) Error() string {
 	return fmt.Sprintf("%d:%d: undefined: "+e.Name, e.Pos.Line, e.Pos.Column)
 }
 
+// ErrUndefinedFunction is returned when a Scanspec calls a function that does not exist.
+type ErrUndefinedFunction struct {
+	Pos  lexer.Position
+	Name string
+}
+
+func (e ErrUndefinedFunction) Error() string {
+	return fmt.Sprintf("%d:%d: undefined function: %s", e.Pos.Line, e.Pos.Column, e.Name)
+}
+
 type ErrCantScanType struct{}
 
 func (e ErrCantScanType) Error() string {
