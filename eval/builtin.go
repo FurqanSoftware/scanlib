@@ -2,17 +2,23 @@ package eval
 
 import (
 	"errors"
+	"reflect"
 	"strconv"
 )
 
 // Functions maps built-in function names to their implementations.
 var Functions = map[string]func(args ...interface{}) (interface{}, error){
 	"len": func(args ...interface{}) (interface{}, error) {
-		s, ok := args[0].(string)
-		if !ok {
+		if len(args) != 1 {
 			return nil, ErrInvalidArgument{}
 		}
-		return len(s), nil
+		if s, ok := args[0].(string); ok {
+			return len(s), nil
+		}
+		if v := reflect.ValueOf(args[0]); v.Kind() == reflect.Slice {
+			return v.Len(), nil
+		}
+		return nil, ErrInvalidArgument{}
 	},
 
 	"toInt64": func(args ...interface{}) (interface{}, error) {

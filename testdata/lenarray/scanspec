@@ -1,0 +1,17 @@
+var N int
+scan N
+eol
+var A [N]int
+for i := 0 ... N
+	scan A[i]
+end
+eol
+check len(A) == N
+var W [N]string
+for i := 0 ... N
+	scan W[i]
+	check len(W[i]) <= 3
+end
+eol
+check len(W) == N
+eof

@@ -12,15 +12,23 @@ func TestLen(t *testing.T) {
 		{"", 0},
 		{"hello", 5},
 		{"abc def", 7},
+		{[]bool{true, false}, 2},
+		{[]int{}, 0},
+		{[]int{1, 2, 3}, 3},
+		{[]int64{1, 2}, 2},
+		{[]float32{1.5}, 1},
+		{[]float64{1.5, 2.5, 3.5, 4.5}, 4},
+		{[]string{"a", "bc"}, 2},
+		{[][]int{{1, 2, 3}, {4, 5, 6}}, 2},
 	}
 	for _, tt := range tests {
 		got, err := Functions["len"](tt.arg)
 		if err != nil {
-			t.Errorf("len(%q): unexpected error: %v", tt.arg, err)
+			t.Errorf("len(%#v): unexpected error: %v", tt.arg, err)
 			continue
 		}
 		if got != tt.want {
-			t.Errorf("len(%q) = %v, want %v", tt.arg, got, tt.want)
+			t.Errorf("len(%#v) = %v, want %v", tt.arg, got, tt.want)
 		}
 	}
 }
@@ -29,6 +37,16 @@ func TestLen_InvalidArg(t *testing.T) {
 	_, err := Functions["len"](42)
 	if err == nil {
 		t.Error("len(42): expected error")
+	}
+
+	_, err = Functions["len"]()
+	if err == nil {
+		t.Error("len(): expected error")
+	}
+
+	_, err = Functions["len"]("a", "b")
+	if err == nil {
+		t.Error(`len("a", "b"): expected error`)
 	}
 }
 
